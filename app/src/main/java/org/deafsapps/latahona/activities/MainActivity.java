@@ -1,24 +1,40 @@
 package org.deafsapps.latahona.activities;
 
 import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 
 import org.deafsapps.latahona.R;
+import org.deafsapps.latahona.fragments.CardFragment;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, NavigationView.OnNavigationItemSelectedListener
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, NavigationView.OnNavigationItemSelectedListener,
+                                                                    TabLayout.OnTabSelectedListener
 {
     private static final String TAG_MAIN_ACTIVITY = "In-MainActivity";
 
     private CoordinatorLayout mCoordLayout;
     private DrawerLayout mDrawerLayout;
+    private ViewPager mViewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -53,13 +69,52 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mActionBar.setDisplayHomeAsUpEnabled(true);
         }
         //--------------------------------------
+
+        //----- VIEWPAGER -----
+        // A 'ViewPager' object allows to include swipe gesture to move across pages or fragments
+        this.mViewPager = (ViewPager) this.findViewById(R.id.appViewPager);
+        MyPageAdapter mPageAdapter = new MyPageAdapter(this.getSupportFragmentManager());
+            mPageAdapter.addFragment(new CardFragment(), "Inicio");
+            mPageAdapter.addFragment(new CardFragment(), "Actualidad");
+            mPageAdapter.addFragment(new CardFragment(), "Formación");
+            mPageAdapter.addFragment(new CardFragment(), "Revistas publicadas");
+            mPageAdapter.addFragment(new CardFragment(), "Recetas");
+            mPageAdapter.addFragment(new CardFragment(), "Nacional");
+            mPageAdapter.addFragment(new CardFragment(), "Internacional");
+            mPageAdapter.addFragment(new CardFragment(), "Asociaciones");
+            mPageAdapter.addFragment(new CardFragment(), "Ferias");
+        this.mViewPager.setAdapter(mPageAdapter);
+        //--------------------------------------
+
+        //----- TABLAYOUT -----
+        // Getting a reference to the 'TabLayout' to add 'Tab' elements through a 'ViewPager' object
+        final TabLayout appTabLayout = (TabLayout) this.findViewById(R.id.appTabLayout);
+        // 'setupWithViewPager' requires to override the 'getPageTitle' method from the 'FragmentPageAdapter' class
+        // The return value of the latter must be a List or array with the titles of the distinct tabs
+        appTabLayout.setupWithViewPager(this.mViewPager);
+        //--------------------------------------
+
+        //----- TABLAYOUT -----
+        final FloatingActionButton mFAB = (FloatingActionButton) this.findViewById(R.id.appFAB);
+            mFAB.setOnClickListener(this);
+        //--------------------------------------
     }
 
     @Override
     public void onClick(View whichView)
     {
+        if (whichView.getId() == R.id.appFAB)
+        {
+            Snackbar.make(this.mCoordLayout, "FAB clicked", Snackbar.LENGTH_SHORT).show();
+        }
+    }
 
-
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        MenuInflater mInflater = this.getMenuInflater();
+        mInflater.inflate(R.menu.menu_options, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
     // Since the 'Toolbar' is enabled and working with the 'ActionBar', this method is called when the 'Hamburger' or a Toolbar option is clicked
@@ -80,6 +135,56 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean onNavigationItemSelected(MenuItem item)
     {
-        return false;
+        // Item is checked
+        item.setChecked(true);
+
+        // Closing drawer on item click
+        this.mDrawerLayout.closeDrawers();
+        return true;
+    }
+
+    // The following methods correspond to 'TabLayout.OnTabSelectedListener'
+    @Override
+    public void onTabSelected(TabLayout.Tab tab) { this.mViewPager.setCurrentItem(tab.getPosition()); }
+
+    @Override
+    public void onTabUnselected(TabLayout.Tab tab) { }
+
+    @Override
+    public void onTabReselected(TabLayout.Tab tab) { }
+
+    // This 'FragmentPageAdapter' instance will be used with the 'ViewPager' object
+    private class MyPageAdapter extends FragmentPagerAdapter
+    {
+        //private FragmentManager mManager;
+        private List<Fragment> mFragmentList = new ArrayList<>();
+        private List<String> mFragmentTitleList = new ArrayList<>();
+
+        public MyPageAdapter(FragmentManager mFragManager)
+        {
+            super(mFragManager);
+            //this.mManager = mFragManager;
+        }
+
+        public void addFragment(Fragment aFragment, String aFragTitle)
+        {
+            this.mFragmentList.add(aFragment);
+            this.mFragmentTitleList.add(aFragTitle);
+        }
+
+        @Override
+        public Fragment getItem(int position) { return this.mFragmentList.get(position); }
+
+        public String getFragTitle(int position) { return this.mFragmentTitleList.get(position); }
+
+        @Override
+        public int getCount() { return this.mFragmentList.size(); }
+
+        @Override
+        public CharSequence getPageTitle(int position) { return this.mFragmentTitleList.get(position); }
+
+        public List<Fragment> getFragmentList() { return mFragmentList; }
+
+        public List<String> getFragmentTitleList() { return mFragmentTitleList; }
     }
 }
