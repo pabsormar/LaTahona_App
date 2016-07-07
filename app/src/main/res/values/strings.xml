@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">La Tahona</string>
+    <string name="card_action_title">Action</string>
 </resources>
