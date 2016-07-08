@@ -23,18 +23,29 @@ import android.widget.Button;
 
 import org.deafsapps.latahona.R;
 import org.deafsapps.latahona.fragments.CardFragment;
+import org.deafsapps.latahona.util.FeedItem;
+import org.deafsapps.latahona.util.FeedParser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, NavigationView.OnNavigationItemSelectedListener,
                                                                     TabLayout.OnTabSelectedListener
 {
     private static final String TAG_MAIN_ACTIVITY = "In-MainActivity";
+    private static final String LA_TAHONA_FEED_URL = "http://www.revistalatahona.com/feed/";
 
     private CoordinatorLayout mCoordLayout;
     private DrawerLayout mDrawerLayout;
     private ViewPager mViewPager;
+    private ArrayList<FeedItem> mFeedItemList;
+
+    // This interface allows to retrieve results from the AsyncTask
+    public interface OnFeedListener
+    {
+        void onLoadCompleted(ArrayList<FeedItem> mList);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -70,19 +81,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         //--------------------------------------
 
+        //----- LOADING FEED -----
+        // The first parameter refers to the 'Context', the second one to the 'OnFeedListener' interface
+        FeedParser mParser = new FeedParser(this);
+        try {
+            this.mFeedItemList = mParser.execute(MainActivity.LA_TAHONA_FEED_URL).get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+        //--------------------------------------
+
         //----- VIEWPAGER -----
         // A 'ViewPager' object allows to include swipe gesture to move across pages or fragments
         this.mViewPager = (ViewPager) this.findViewById(R.id.appViewPager);
         MyPageAdapter mPageAdapter = new MyPageAdapter(this.getSupportFragmentManager());
-            mPageAdapter.addFragment(new CardFragment(), "Inicio");
-            mPageAdapter.addFragment(new CardFragment(), "Actualidad");
-            mPageAdapter.addFragment(new CardFragment(), "Formación");
-            mPageAdapter.addFragment(new CardFragment(), "Revistas publicadas");
-            mPageAdapter.addFragment(new CardFragment(), "Recetas");
-            mPageAdapter.addFragment(new CardFragment(), "Nacional");
-            mPageAdapter.addFragment(new CardFragment(), "Internacional");
-            mPageAdapter.addFragment(new CardFragment(), "Asociaciones");
-            mPageAdapter.addFragment(new CardFragment(), "Ferias");
+
+        // If the feed has been properly loaded, a 'Fragment' object is added to the 'PageAdapter'
+        if (this.mFeedItemList != null && !this.mFeedItemList.isEmpty())
+        {
+            Bundle mBundle = new Bundle();
+                mBundle.putParcelableArrayList(this.getResources().getResourceName(R.string.feed_data_name), this.mFeedItemList);
+
+            Fragment mFragment = new CardFragment();
+                mFragment.setArguments(mBundle);
+
+            mPageAdapter.addFragment(mFragment, "Inicio");
+        }
+            //mPageAdapter.addFragment(new CardFragment(), "Inicio");
+            //mPageAdapter.addFragment(new CardFragment(), "Actualidad");
+            //mPageAdapter.addFragment(new CardFragment(), "Formación");
+            //mPageAdapter.addFragment(new CardFragment(), "Revistas publicadas");
+            //mPageAdapter.addFragment(new CardFragment(), "Recetas");
+            //mPageAdapter.addFragment(new CardFragment(), "Nacional");
+            //mPageAdapter.addFragment(new CardFragment(), "Internacional");
+            //mPageAdapter.addFragment(new CardFragment(), "Asociaciones");
+            //mPageAdapter.addFragment(new CardFragment(), "Ferias");
         this.mViewPager.setAdapter(mPageAdapter);
         //--------------------------------------
 
