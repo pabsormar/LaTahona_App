@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -88,10 +89,10 @@ public class CardFragment extends Fragment
         @Override
         public void onBindViewHolder(MyCardViewHolder holder, int position)
         {
-            // get element from your dataset at this position
-            // replace the contents of the view with that element
-            holder.title_TxtView.setText(this.itemList.get(position).getItemTitle());
-            holder.description_TxtView.setText(this.itemList.get(position).getItemDescription());
+            // get element from your dataset at this position and replace the contents of the view with that element
+            // The piece 'Html.fromHtml()' allows to deal with HTML 'CDATA' sections
+            holder.title_TxtView.setText(Html.fromHtml(this.itemList.get(position).getItemTitle()));
+            holder.description_TxtView.setText(Html.fromHtml(this.itemList.get(position).getItemDescription()));
         }
 
         // Return the size of your data-set (invoked by the layout manager)
