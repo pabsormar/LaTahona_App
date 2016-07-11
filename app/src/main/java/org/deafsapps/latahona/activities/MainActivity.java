@@ -19,7 +19,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 
 import org.deafsapps.latahona.R;
 import org.deafsapps.latahona.fragments.CardFragment;

@@ -14,9 +14,15 @@ public class FeedItem implements Parcelable
     private String itemDescription;
     private String itemContent;
 
-    public FeedItem(String mString)
+    public FeedItem() { }
+
+    public FeedItem(String aTitle, String aLink, String aPubDate, String aDescription, String aContent)
     {
-        this.itemTitle = mString;
+        this.itemTitle = aTitle;
+        this.itemLink = aLink;
+        this.itemPubDate = aPubDate;
+        this.itemDescription = aDescription;
+        this.itemContent = aContent;
     }
 
     // This constructor relates to the 'Parcelable' condition of this class

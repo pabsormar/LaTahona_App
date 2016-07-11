@@ -50,13 +50,15 @@ public class CardFragment extends Fragment
         // Creating a 'ViewHolder' to speed up the performance
         public class MyCardViewHolder extends RecyclerView.ViewHolder
         {
-            public TextView title_TxtView;
+            private TextView title_TxtView;
+            private TextView description_TxtView;
 
             public MyCardViewHolder(View itemView)
             {
                 super(itemView);
 
                 this.title_TxtView = (TextView) itemView.findViewById(R.id.card_title);
+                this.description_TxtView = (TextView) itemView.findViewById(R.id.card_body);
             }
         }
 
@@ -89,6 +91,7 @@ public class CardFragment extends Fragment
             // get element from your dataset at this position
             // replace the contents of the view with that element
             holder.title_TxtView.setText(this.itemList.get(position).getItemTitle());
+            holder.description_TxtView.setText(this.itemList.get(position).getItemDescription());
         }
 
         // Return the size of your data-set (invoked by the layout manager)

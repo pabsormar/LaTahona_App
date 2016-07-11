@@ -2,18 +2,17 @@ package org.deafsapps.latahona.util;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 import android.util.Log;
-import android.util.Xml;
 import android.widget.Toast;
 
-import org.deafsapps.latahona.activities.MainActivity;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -50,46 +49,19 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
 
             if (respCode == HttpURLConnection.HTTP_OK)
             {
-                ArrayList<FeedItem> mFeedItemList = new ArrayList<>();
+                ArrayList<FeedItem> mFeedItemList;
 
                 InputStream myInStream = myConnection.getInputStream();   // Throws 'IOException'
 
-                XmlPullParser myXmlParser = Xml.newPullParser();
-                //myXmlParser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);   // Throws 'XmlPullParserException'
-                myXmlParser.setInput(myInStream, null);   // Throws 'XmlPullParserException'
-
-                String fullTitleString = "";
-                int event = myXmlParser.nextTag();
-                // This parsing process is ONLY ensured to be valid for the specific feed accessed
-                while (myXmlParser.getEventType() != XmlPullParser.END_DOCUMENT)
-                {
-                    switch (event)
-                    {
-                        case XmlPullParser.START_TAG:
-                            if (myXmlParser.getName().equals(FeedParser.ITEM))
-                            {
-                                myXmlParser.nextTag();
-                                myXmlParser.next();
-                                String mValue = myXmlParser.getText();
-                                fullTitleString += "- " + mValue + "\n";
-
-                                mFeedItemList.add(new FeedItem(mValue));
-                            }
-                            break;
-                    }
-
-                    event = myXmlParser.next();
-                }
-                Log.i(FeedParser.TAG_FEED_PARSER, fullTitleString);
+                // The following method does the actual parsing of the feed
+                mFeedItemList = ParseFeed(myInStream);
 
                 myInStream.close();   // Always close the 'InputStream'
 
                 return mFeedItemList;
             }
         }
-        catch (MalformedURLException e1) { e1.printStackTrace(); }
-        catch (IOException e2) { e2.printStackTrace(); }
-        catch (XmlPullParserException e3) { e3.printStackTrace(); }
+        catch (IOException e1) { e1.printStackTrace(); }
 
         return null;
     }
@@ -99,11 +71,78 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
     {
         super.onPostExecute(mList);
 
-        if (!mList.isEmpty())
+        if (mList != null)
         {
-            Toast.makeText(this.threadContext, "Feed loaded", Toast.LENGTH_LONG).show();
+            Log.i(FeedParser.TAG_FEED_PARSER, "Feed loaded");
+            Toast.makeText(this.threadContext, "Feed loaded", Toast.LENGTH_SHORT).show();
         }
         else
-            Log.i(FeedParser.TAG_FEED_PARSER, "No feed to be loaded");
+        {
+            Log.w(FeedParser.TAG_FEED_PARSER, "Error loading feed");
+            Toast.makeText(this.threadContext, "Error loading feed", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Nullable
+    private ArrayList<FeedItem> ParseFeed(InputStream myInStream)
+    {
+        ArrayList<FeedItem> feedList = new ArrayList<>();
+
+        try
+        {
+            XmlPullParserFactory mFactory;
+                mFactory = XmlPullParserFactory.newInstance();
+                mFactory.setNamespaceAware(true);
+
+            XmlPullParser myXmlParser;
+                myXmlParser = mFactory.newPullParser();
+                myXmlParser.setInput(myInStream, "UTF-8");   // Including the encoding is CRITICAL to work it out!
+
+            FeedItem mItem = null;
+            String eventText = "";
+            int eventType = myXmlParser.getEventType();
+
+            while (eventType != XmlPullParser.END_DOCUMENT)
+            {
+                switch (eventType)
+                {
+                    case XmlPullParser.START_TAG:
+                        if (myXmlParser.getName().equals(FeedParser.ITEM)) { mItem = new FeedItem(); }
+                        break;
+
+                    case XmlPullParser.TEXT:
+                        eventText = myXmlParser.getText();
+                        break;
+
+                    case XmlPullParser.END_TAG:
+                        if (mItem != null)
+                        {
+                            if (myXmlParser.getName().equals(FeedParser.ITEM))
+                            {
+                                feedList.add(mItem);
+                                mItem = null;
+                            }
+                            else if (myXmlParser.getName().equals(FeedParser.TITLE)) { mItem.setItemTitle(eventText); }
+                            else if (myXmlParser.getName().equals(FeedParser.LINK)) { mItem.setItemLink(eventText); }
+                            else if (myXmlParser.getName().equals(FeedParser.PUBDATE)) { mItem.setItemPubDate(eventText); }
+                            else if (myXmlParser.getName().equals(FeedParser.DESCRIPTION)) { mItem.setItemDescription(eventText); }
+                            else if (myXmlParser.getName().equals(FeedParser.CONTENT)) { mItem.setItemContent(eventText); }
+                        }
+                        break;
+                }
+
+                eventType = myXmlParser.next();
+            }
+            System.out.println("End document");
+
+        }
+        catch (XmlPullParserException | IOException e1) { e1.printStackTrace(); }
+        finally
+        {
+            if (feedList.isEmpty())
+                return null;
+        }
+
+        return feedList;
     }
 }

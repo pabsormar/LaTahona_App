@@ -2,16 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:icon="@mipmap/ic_launcher"
-        android:title="Settings"
+        android:icon="@drawable/ic_refresh_24dp"
+        android:title="@string/option_refresh"
         app:showAsAction="always"/>
     <item
-        android:icon="@mipmap/ic_launcher"
-        android:title="Share"
-        app:showAsAction="always"/>
-    <item
-        android:icon="@mipmap/ic_launcher"
-        android:title="Like"
-        android:id="@+id/likeOption"
-        app:showAsAction="never" />
+        android:icon="@drawable/ic_build_24dp"
+        android:title="@string/option_settings"
+        app:showAsAction="never"/>
 </menu>

@@ -8,7 +8,7 @@
     <dimen name="nav_header_height">222dp</dimen>
 
     <!-- 'Card' objects dimensions -->
-    <dimen name="card_height">152dp</dimen>
+    <dimen name="card_height">180dp</dimen>
     <dimen name="card_horizontal_padding">5dp</dimen>
     <dimen name="card_vertical_padding">2dp</dimen>
     <dimen name="card_image_height">100dp</dimen>
