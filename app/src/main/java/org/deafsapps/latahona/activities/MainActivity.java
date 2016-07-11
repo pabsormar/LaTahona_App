@@ -15,6 +15,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -39,12 +40,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private DrawerLayout mDrawerLayout;
     private ViewPager mViewPager;
     private ArrayList<FeedItem> mFeedItemList;
-
-    // This interface allows to retrieve results from the AsyncTask
-    public interface OnFeedListener
-    {
-        void onLoadCompleted(ArrayList<FeedItem> mList);
-    }
+    private int[] categoryArray = {R.string.feed_category_inicio, R.string.feed_category_actualidad, R.string.feed_category_formacion,
+                                   R.string.feed_category_revistas_publicadas, R.string.feed_category_recetas, R.string.feed_category_nacional,
+                                   R.string.feed_category_internacional, R.string.feed_category_asociaciones, R.string.feed_category_ferias};
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -66,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //----- TOOLBAR -----
         // Getting a reference to the 'Toolbar' and adding it as ActionBar for the 'Activity'
         final Toolbar mToolbar = (Toolbar) this.findViewById(R.id.appToolbar);
-        // This coming line maked the magic, replacing the 'ActionBar' with the 'Toolbar'
+        // This coming line makes the magic, replacing the 'ActionBar' with the 'Toolbar'
         this.setSupportActionBar(mToolbar);
 
         final ActionBar mActionBar = this.getSupportActionBar();
@@ -85,11 +83,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         FeedParser mParser = new FeedParser(this);
         try {
             this.mFeedItemList = mParser.execute(MainActivity.LA_TAHONA_FEED_URL).get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
+        } catch (InterruptedException | ExecutionException e) { e.printStackTrace(); }
         //--------------------------------------
 
         //----- VIEWPAGER -----
@@ -100,23 +94,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // If the feed has been properly loaded, a 'Fragment' object is added to the 'PageAdapter'
         if (this.mFeedItemList != null && !this.mFeedItemList.isEmpty())
         {
-            Bundle mBundle = new Bundle();
-                mBundle.putParcelableArrayList(this.getResources().getResourceName(R.string.feed_data_name), this.mFeedItemList);
+            // Showing different 'CardFragment' objects according to feed 'category' fields
+            ArrayList<FeedItem> categoryList;
+            for (int aCategory : this.categoryArray)
+            {
+                categoryList = (ArrayList<FeedItem>) getCategoryList(aCategory);
 
-            Fragment mFragment = new CardFragment();
-                mFragment.setArguments(mBundle);
+                if (!categoryList.isEmpty())
+                {
+                    Bundle mBundle = new Bundle();
+                    mBundle.putParcelableArrayList(this.getResources().getResourceName(R.string.feed_data_name), categoryList);
 
-            mPageAdapter.addFragment(mFragment, "Inicio");
+                    Fragment mFragment = new CardFragment();
+                    mFragment.setArguments(mBundle);
+
+                    mPageAdapter.addFragment(mFragment, this.getResources().getString(aCategory));
+                }
+            }
         }
-            //mPageAdapter.addFragment(new CardFragment(), "Inicio");
-            //mPageAdapter.addFragment(new CardFragment(), "Actualidad");
-            //mPageAdapter.addFragment(new CardFragment(), "Formación");
-            //mPageAdapter.addFragment(new CardFragment(), "Revistas publicadas");
-            //mPageAdapter.addFragment(new CardFragment(), "Recetas");
-            //mPageAdapter.addFragment(new CardFragment(), "Nacional");
-            //mPageAdapter.addFragment(new CardFragment(), "Internacional");
-            //mPageAdapter.addFragment(new CardFragment(), "Asociaciones");
-            //mPageAdapter.addFragment(new CardFragment(), "Ferias");
+
         this.mViewPager.setAdapter(mPageAdapter);
         //--------------------------------------
 
@@ -128,10 +124,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         appTabLayout.setupWithViewPager(this.mViewPager);
         //--------------------------------------
 
-        //----- TABLAYOUT -----
+        //----- FAB -----
         final FloatingActionButton mFAB = (FloatingActionButton) this.findViewById(R.id.appFAB);
             mFAB.setOnClickListener(this);
         //--------------------------------------
+    }
+
+    private List<FeedItem> getCategoryList(int feedCategory)
+    { Log.i(MainActivity.TAG_MAIN_ACTIVITY, "feedCategory: " + this.getResources().getString(feedCategory));
+        List<FeedItem> mList = new ArrayList<>();
+
+        for (FeedItem mItem : this.mFeedItemList)
+        {
+            for (String aString : mItem.getItemCategory())
+            {
+                // If 'feedCategory' value is found among the categories of the 'FeedItem' object, the latter is added to the 'List'
+                if (aString.equals(this.getResources().getString(feedCategory))) { mList.add(mItem); }
+            }
+        }
+Log.i(MainActivity.TAG_MAIN_ACTIVITY, "List size: " + String.valueOf(mList.size()));
+        return mList;
     }
 
     @Override
@@ -194,11 +206,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         private List<Fragment> mFragmentList = new ArrayList<>();
         private List<String> mFragmentTitleList = new ArrayList<>();
 
-        public MyPageAdapter(FragmentManager mFragManager)
-        {
-            super(mFragManager);
-            //this.mManager = mFragManager;
-        }
+        public MyPageAdapter(FragmentManager mFragManager) { super(mFragManager); }
 
         public void addFragment(Fragment aFragment, String aFragTitle)
         {

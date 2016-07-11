@@ -59,7 +59,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/appFAB"
-            android:src="@mipmap/ic_launcher"
+            android:src="@drawable/ic_subscribe_24dp"
             android:layout_gravity="bottom|end"
             android:layout_marginBottom="@dimen/activity_vertical_margin"
             android:layout_marginEnd="@dimen/activity_horizontal_margin"

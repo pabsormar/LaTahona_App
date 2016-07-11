@@ -24,6 +24,7 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
     private static final String TITLE = "title";
     private static final String LINK = "link";
     private static final String PUBDATE = "pubDate";
+    private static final String CATEGORY = "category";
     private static final String DESCRIPTION = "description";
     private static final String CONTENT = "content:encoded";
 
@@ -125,6 +126,7 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
                             else if (myXmlParser.getName().equals(FeedParser.TITLE)) { mItem.setItemTitle(eventText); }
                             else if (myXmlParser.getName().equals(FeedParser.LINK)) { mItem.setItemLink(eventText); }
                             else if (myXmlParser.getName().equals(FeedParser.PUBDATE)) { mItem.setItemPubDate(eventText); }
+                            else if (myXmlParser.getName().equals(FeedParser.CATEGORY)) { mItem.setItemCategoryElement(eventText); }
                             else if (myXmlParser.getName().equals(FeedParser.DESCRIPTION)) { mItem.setItemDescription(eventText); }
                             else if (myXmlParser.getName().equals(FeedParser.CONTENT)) { mItem.setItemContent(eventText); }
                         }

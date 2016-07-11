@@ -4,6 +4,9 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class FeedItem implements Parcelable
 {
     private static final String TAG_FEED_ITEM = "In-FeedItem";
@@ -11,19 +14,11 @@ public class FeedItem implements Parcelable
     private String itemTitle;
     private String itemLink;
     private String itemPubDate;
+    private List<String> itemCategory = new ArrayList<>();
     private String itemDescription;
     private String itemContent;
 
     public FeedItem() { }
-
-    public FeedItem(String aTitle, String aLink, String aPubDate, String aDescription, String aContent)
-    {
-        this.itemTitle = aTitle;
-        this.itemLink = aLink;
-        this.itemPubDate = aPubDate;
-        this.itemDescription = aDescription;
-        this.itemContent = aContent;
-    }
 
     // This constructor relates to the 'Parcelable' condition of this class
     public FeedItem(Parcel pc)
@@ -31,6 +26,7 @@ public class FeedItem implements Parcelable
         this.itemTitle = pc.readString();
         this.itemLink = pc.readString();
         this.itemPubDate = pc.readString();
+        this.itemCategory = pc.readArrayList(String.class.getClassLoader());
         this.itemDescription = pc.readString();
         this.itemContent = pc.readString();
     }
@@ -43,6 +39,10 @@ public class FeedItem implements Parcelable
 
     public String getItemPubDate() { return itemPubDate; }
     public void setItemPubDate(String itemPubDate) { this.itemPubDate = itemPubDate; }
+
+    public List<String> getItemCategory() { return itemCategory; }
+    public void setItemCategory(List<String> itemCategory) { this.itemCategory = itemCategory; }
+    public void setItemCategoryElement(String itemCategoryElement) { this.itemCategory.add(itemCategoryElement); }
 
     public String getItemDescription() { return itemDescription; }
     public void setItemDescription(String itemDescription) { this.itemDescription = itemDescription; }
@@ -61,6 +61,7 @@ public class FeedItem implements Parcelable
         dest.writeString(this.itemTitle);
         dest.writeString(this.itemLink);
         dest.writeString(this.itemPubDate);
+        dest.writeList(this.itemCategory);
         dest.writeString(this.itemDescription);
         dest.writeString(this.itemContent);
     }

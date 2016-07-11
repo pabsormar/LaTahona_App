@@ -1,11 +1,23 @@
 <resources>
+    <!-- 'string' values relating to general aspects of the app -->
     <string name="app_name">La Tahona</string>
     <string name="option_refresh">Refresh</string>
     <string name="option_settings">Settings</string>
 
+    <!-- 'string' values relating to the 'Card' object -->
     <string name="card_action_title">Action</string>
     <string name="card_image_content_description">A thumbnail</string>
     <string name="card_image_button_content_description">An image button</string>
 
+    <!-- 'string' values relating to the feed -->
     <string name="feed_data_name">feed data</string>
+    <string name="feed_category_inicio">Inicio</string>
+    <string name="feed_category_actualidad">Actualidad</string>
+    <string name="feed_category_formacion">Formación</string>
+    <string name="feed_category_revistas_publicadas">Revistas publicadas</string>
+    <string name="feed_category_recetas">Recetas</string>
+    <string name="feed_category_nacional">Nacional</string>
+    <string name="feed_category_internacional">Internacional</string>
+    <string name="feed_category_asociaciones">Asociaciones</string>
+    <string name="feed_category_ferias">Ferias</string>
 </resources>
