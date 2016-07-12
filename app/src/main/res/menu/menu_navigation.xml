@@ -3,17 +3,40 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:icon="@mipmap/ic_launcher"
+            android:id="@+id/navigation_option_actualidad"
+            android:icon="@drawable/ic_actualidad_24dp"
             android:tint="@android:color/darker_gray"
-            android:title="One" />
+            android:title="@string/feed_category_actualidad" />
         <item
-            android:icon="@mipmap/ic_launcher"
+            android:id="@+id/navigation_option_formacion"
+            android:icon="@drawable/ic_formacion_24dp"
             android:tint="@android:color/darker_gray"
-            android:title="Two" />
+            android:title="@string/feed_category_formacion" />
         <item
-            android:icon="@mipmap/ic_launcher"
+            android:id="@+id/navigation_option_recetas"
+            android:icon="@drawable/ic_recetas_24dp"
             android:tint="@android:color/darker_gray"
-            android:title="Three" />
+            android:title="@string/feed_category_recetas" />
+        <item
+            android:id="@+id/navigation_option_nacional"
+            android:icon="@drawable/ic_nacional_24dp"
+            android:tint="@android:color/darker_gray"
+            android:title="@string/feed_category_nacional" />
+        <item
+            android:id="@+id/navigation_option_internacional"
+            android:icon="@drawable/ic_internacional_24dp"
+            android:tint="@android:color/darker_gray"
+            android:title="@string/feed_category_internacional" />
+        <item
+            android:id="@+id/navigation_option_asociaciones"
+            android:icon="@drawable/ic_asociaciones_24dp"
+            android:tint="@android:color/darker_gray"
+            android:title="@string/feed_category_asociaciones" />
+        <item
+            android:id="@+id/navigation_option_ferias"
+            android:icon="@drawable/ic_ferias_24dp"
+            android:tint="@android:color/darker_gray"
+            android:title="@string/feed_category_ferias" />
     </group>
 
 </menu>

@@ -1,11 +1,14 @@
 package org.deafsapps.latahona.util;
 
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
-import android.widget.Toast;
 
+import org.deafsapps.latahona.R;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -29,8 +32,20 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
     private static final String CONTENT = "content:encoded";
 
     private Context threadContext;
+    private ProgressDialog mProgDialog;
 
-    public FeedParser(Context mContext) { this.threadContext = mContext; }
+    public FeedParser(Context mContext)
+    {
+        this.threadContext = mContext;
+        this.mProgDialog = new ProgressDialog(mContext);
+    }
+
+    // Shows progress dialog to "keep the app alive"
+    protected void onPreExecute()
+    {
+        this.mProgDialog.setMessage("Loading...");
+        this.mProgDialog.show();
+    }
 
     @Override
     protected ArrayList<FeedItem> doInBackground(String[] params)
@@ -72,15 +87,19 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
     {
         super.onPostExecute(mList);
 
+        // 'ProgressDialog' has to be dismissed
+        if (this.mProgDialog.isShowing())
+            this.mProgDialog.dismiss();
+
         if (mList != null)
         {
             Log.i(FeedParser.TAG_FEED_PARSER, "Feed loaded");
-            Toast.makeText(this.threadContext, "Feed loaded", Toast.LENGTH_SHORT).show();
+            Snackbar.make(((Activity) this.threadContext).findViewById(R.id.appCoordLayout), "Feed loaded", Snackbar.LENGTH_SHORT).show();
         }
         else
         {
             Log.w(FeedParser.TAG_FEED_PARSER, "Error loading feed");
-            Toast.makeText(this.threadContext, "Error loading feed", Toast.LENGTH_SHORT).show();
+            Snackbar.make(((Activity) this.threadContext).findViewById(R.id.appCoordLayout), "Error loading feed", Snackbar.LENGTH_SHORT).show();
         }
     }
 
@@ -142,9 +161,10 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
         finally
         {
             if (feedList.isEmpty())
-                return null;
+                feedList = null;
         }
 
+        // The return value is null if 'feedList' is empty or it is null
         return feedList;
     }
 }

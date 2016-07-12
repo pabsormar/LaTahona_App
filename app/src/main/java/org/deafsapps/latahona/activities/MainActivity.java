@@ -1,5 +1,6 @@
 package org.deafsapps.latahona.activities;
 
+import android.os.Parcelable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -34,15 +35,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                                                     TabLayout.OnTabSelectedListener
 {
     private static final String TAG_MAIN_ACTIVITY = "In-MainActivity";
-    private static final String LA_TAHONA_FEED_URL = "http://www.revistalatahona.com/feed/";
+    private static final String LA_TAHONA_FEED_URL = "http://www.revistalatahona.com/category/";
+
+    private static int[] categoryArray = {R.string.feed_category_actualidad, R.string.feed_category_formacion, R.string.feed_category_recetas, R.string.feed_category_nacional,
+            R.string.feed_category_internacional, R.string.feed_category_asociaciones, R.string.feed_category_ferias};
 
     private CoordinatorLayout mCoordLayout;
     private DrawerLayout mDrawerLayout;
     private ViewPager mViewPager;
-    private ArrayList<FeedItem> mFeedItemList;
-    private int[] categoryArray = {R.string.feed_category_inicio, R.string.feed_category_actualidad, R.string.feed_category_formacion,
-                                   R.string.feed_category_revistas_publicadas, R.string.feed_category_recetas, R.string.feed_category_nacional,
-                                   R.string.feed_category_internacional, R.string.feed_category_asociaciones, R.string.feed_category_ferias};
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -57,8 +57,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // The following lines link the 'DrawerLayout' object and the 'NavigationView' object and their behaviours
         this.mDrawerLayout = (DrawerLayout) this.findViewById(R.id.appDrawerLayout);
         NavigationView mNavigationView = (NavigationView) this.findViewById(R.id.appNavView);
-        // This next line makes 'NavigationView' items react to interaction (defined in 'onNavigationItemSelected' method)
-        mNavigationView.setNavigationItemSelectedListener(this);
+            // This next line makes 'NavigationView' items react to interaction (defined in 'onNavigationItemSelected' method)
+            mNavigationView.setNavigationItemSelectedListener(this);
         //--------------------------------------
 
         //----- TOOLBAR -----
@@ -78,42 +78,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         //--------------------------------------
 
-        //----- LOADING FEED -----
-        // The first parameter refers to the 'Context', the second one to the 'OnFeedListener' interface
-        FeedParser mParser = new FeedParser(this);
-        try {
-            this.mFeedItemList = mParser.execute(MainActivity.LA_TAHONA_FEED_URL).get();
-        } catch (InterruptedException | ExecutionException e) { e.printStackTrace(); }
-        //--------------------------------------
-
         //----- VIEWPAGER -----
         // A 'ViewPager' object allows to include swipe gesture to move across pages or fragments
+        MyPagerAdapter mPagerAdapter = new MyPagerAdapter(this.getSupportFragmentManager());
         this.mViewPager = (ViewPager) this.findViewById(R.id.appViewPager);
-        MyPageAdapter mPageAdapter = new MyPageAdapter(this.getSupportFragmentManager());
-
-        // If the feed has been properly loaded, a 'Fragment' object is added to the 'PageAdapter'
-        if (this.mFeedItemList != null && !this.mFeedItemList.isEmpty())
-        {
-            // Showing different 'CardFragment' objects according to feed 'category' fields
-            ArrayList<FeedItem> categoryList;
-            for (int aCategory : this.categoryArray)
-            {
-                categoryList = (ArrayList<FeedItem>) getCategoryList(aCategory);
-
-                if (!categoryList.isEmpty())
-                {
-                    Bundle mBundle = new Bundle();
-                    mBundle.putParcelableArrayList(this.getResources().getResourceName(R.string.feed_data_name), categoryList);
-
-                    Fragment mFragment = new CardFragment();
-                    mFragment.setArguments(mBundle);
-
-                    mPageAdapter.addFragment(mFragment, this.getResources().getString(aCategory));
-                }
-            }
-        }
-
-        this.mViewPager.setAdapter(mPageAdapter);
+            this.mViewPager.setAdapter(mPagerAdapter);
         //--------------------------------------
 
         //----- TABLAYOUT -----
@@ -128,22 +97,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final FloatingActionButton mFAB = (FloatingActionButton) this.findViewById(R.id.appFAB);
             mFAB.setOnClickListener(this);
         //--------------------------------------
-    }
-
-    private List<FeedItem> getCategoryList(int feedCategory)
-    { Log.i(MainActivity.TAG_MAIN_ACTIVITY, "feedCategory: " + this.getResources().getString(feedCategory));
-        List<FeedItem> mList = new ArrayList<>();
-
-        for (FeedItem mItem : this.mFeedItemList)
-        {
-            for (String aString : mItem.getItemCategory())
-            {
-                // If 'feedCategory' value is found among the categories of the 'FeedItem' object, the latter is added to the 'List'
-                if (aString.equals(this.getResources().getString(feedCategory))) { mList.add(mItem); }
-            }
-        }
-Log.i(MainActivity.TAG_MAIN_ACTIVITY, "List size: " + String.valueOf(mList.size()));
-        return mList;
     }
 
     @Override
@@ -181,17 +134,36 @@ Log.i(MainActivity.TAG_MAIN_ACTIVITY, "List size: " + String.valueOf(mList.size(
     @Override
     public boolean onNavigationItemSelected(MenuItem item)
     {
-        // Item is checked
+        // The selected item is highlighted
         item.setChecked(true);
-
         // Closing drawer on item click
         this.mDrawerLayout.closeDrawers();
+
+        if (item.getItemId() == R.id.navigation_option_actualidad)
+            this.mViewPager.setCurrentItem(0);
+        else if (item.getItemId() == R.id.navigation_option_formacion)
+            this.mViewPager.setCurrentItem(1);
+        else if (item.getItemId() == R.id.navigation_option_recetas)
+            this.mViewPager.setCurrentItem(2);
+        else if (item.getItemId() == R.id.navigation_option_nacional)
+            this.mViewPager.setCurrentItem(3);
+        else if (item.getItemId() == R.id.navigation_option_internacional)
+            this.mViewPager.setCurrentItem(4);
+        else if (item.getItemId() == R.id.navigation_option_asociaciones)
+            this.mViewPager.setCurrentItem(5);
+        else if (item.getItemId() == R.id.navigation_option_ferias)
+            this.mViewPager.setCurrentItem(6);
+
         return true;
     }
 
     // The following methods correspond to 'TabLayout.OnTabSelectedListener'
     @Override
-    public void onTabSelected(TabLayout.Tab tab) { this.mViewPager.setCurrentItem(tab.getPosition()); }
+    public void onTabSelected(TabLayout.Tab tab)
+    {
+        // When a tab is selected, the 'ViewPager' object gets updated
+        this.mViewPager.setCurrentItem(tab.getPosition());
+    }
 
     @Override
     public void onTabUnselected(TabLayout.Tab tab) { }
@@ -200,33 +172,69 @@ Log.i(MainActivity.TAG_MAIN_ACTIVITY, "List size: " + String.valueOf(mList.size(
     public void onTabReselected(TabLayout.Tab tab) { }
 
     // This 'FragmentPageAdapter' instance will be used with the 'ViewPager' object
-    private class MyPageAdapter extends FragmentPagerAdapter
+    private class MyPagerAdapter extends FragmentPagerAdapter
     {
-        //private FragmentManager mManager;
-        private List<Fragment> mFragmentList = new ArrayList<>();
-        private List<String> mFragmentTitleList = new ArrayList<>();
+        private static final int NUMBER_OF_TABS = 7;
 
-        public MyPageAdapter(FragmentManager mFragManager) { super(mFragManager); }
+        public MyPagerAdapter(FragmentManager mFragManager) { super(mFragManager); }
 
-        public void addFragment(Fragment aFragment, String aFragTitle)
+        @Override
+        public Fragment getItem(int position)
         {
-            this.mFragmentList.add(aFragment);
-            this.mFragmentTitleList.add(aFragTitle);
+            switch (position)
+            {
+                case 0:
+                    return retrieveFeedCategoryFragment(getResources().getString(categoryArray[0]));
+                case 1:
+                    return retrieveFeedCategoryFragment(getResources().getString(categoryArray[1]));
+                case 2:
+                    return retrieveFeedCategoryFragment(getResources().getString(categoryArray[2]));
+                case 3:
+                    return retrieveFeedCategoryFragment(getResources().getString(categoryArray[3]));
+                case 4:
+                    return retrieveFeedCategoryFragment(getResources().getString(categoryArray[4]));
+                case 5:
+                    return retrieveFeedCategoryFragment(getResources().getString(categoryArray[5]));
+                case 6:
+                    return retrieveFeedCategoryFragment(getResources().getString(categoryArray[6]));
+                default:
+                    return new Fragment();
+            }
         }
 
         @Override
-        public Fragment getItem(int position) { return this.mFragmentList.get(position); }
-
-        public String getFragTitle(int position) { return this.mFragmentTitleList.get(position); }
+        public int getCount() { return MyPagerAdapter.NUMBER_OF_TABS; }
 
         @Override
-        public int getCount() { return this.mFragmentList.size(); }
+        public CharSequence getPageTitle(int position) { return getResources().getString(MainActivity.categoryArray[position]); }
 
-        @Override
-        public CharSequence getPageTitle(int position) { return this.mFragmentTitleList.get(position); }
+        // This method queries the feed (according to the 'aCateogry' section) and returns a 'Fragment' object to be published
+        private Fragment retrieveFeedCategoryFragment(String aCategory)
+        {
+            List<FeedItem> mFeedItemList;
 
-        public List<Fragment> getFragmentList() { return mFragmentList; }
+            try
+            {
+                FeedParser mParser = new FeedParser(mCoordLayout.getContext());
 
-        public List<String> getFragmentTitleList() { return mFragmentTitleList; }
+                // Querying 'La Tahona' feed for 'aCategory' section
+                mFeedItemList = mParser.execute(MainActivity.LA_TAHONA_FEED_URL + aCategory + "/feed/").get();
+
+                if (mFeedItemList != null)
+                {
+                    Bundle mBundle = new Bundle();
+                        mBundle.putParcelableArrayList(getResources().getResourceName(R.string.feed_data_name), (ArrayList<? extends Parcelable>) mFeedItemList);
+
+                    Fragment mFragment = new CardFragment();
+                        mFragment.setArguments(mBundle);
+
+                    Log.i(MainActivity.TAG_MAIN_ACTIVITY, "Feed from " + aCategory + " category loaded");
+                    return mFragment;
+                }
+            } catch (InterruptedException | ExecutionException e) { e.printStackTrace(); }
+
+            // If the feed has not been successfully queried, a 'dummy' Fragment object is returned
+            return new Fragment();
+        }
     }
 }

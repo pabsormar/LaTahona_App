@@ -60,11 +60,10 @@
             android:layout_height="wrap_content"
             android:id="@+id/appFAB"
             android:src="@drawable/ic_subscribe_24dp"
-            android:layout_gravity="bottom|end"
-            android:layout_marginBottom="@dimen/activity_vertical_margin"
-            android:layout_marginEnd="@dimen/activity_horizontal_margin"
-            android:layout_marginRight="@dimen/activity_horizontal_margin"/>
-            <!-- app:layout_behavior="org.bts_netmind.materialdesignmanager.ScrollAwareFABBehavior"/> -->
+            android:layout_margin="@dimen/activity_vertical_margin"
+            app:layout_anchor="@id/appViewPager"
+            app:layout_anchorGravity="bottom|right|end"
+            app:layout_behavior="org.deafsapps.latahona.util.ScrollFabBehaviour"/>
     </android.support.design.widget.CoordinatorLayout>
 
     <android.support.design.widget.NavigationView
