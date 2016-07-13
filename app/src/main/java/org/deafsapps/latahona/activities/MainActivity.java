@@ -1,5 +1,6 @@
 package org.deafsapps.latahona.activities;
 
+import android.content.Context;
 import android.os.Parcelable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -12,6 +13,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -32,7 +34,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, NavigationView.OnNavigationItemSelectedListener,
-                                                                    TabLayout.OnTabSelectedListener
+                                                                    TabLayout.OnTabSelectedListener, SwipeRefreshLayout.OnRefreshListener
 {
     private static final String TAG_MAIN_ACTIVITY = "In-MainActivity";
     private static final String LA_TAHONA_FEED_URL = "http://www.revistalatahona.com/category/";
@@ -41,7 +43,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             R.string.feed_category_internacional, R.string.feed_category_asociaciones, R.string.feed_category_ferias};
 
     private CoordinatorLayout mCoordLayout;
+    private MyPagerAdapter mPagerAdapter;
     private DrawerLayout mDrawerLayout;
+    private NavigationView mNavigationView;
+    private SwipeRefreshLayout mSwipeRefresh;
     private ViewPager mViewPager;
 
     @Override
@@ -56,9 +61,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //----- DRAWERLAYOUT -----
         // The following lines link the 'DrawerLayout' object and the 'NavigationView' object and their behaviours
         this.mDrawerLayout = (DrawerLayout) this.findViewById(R.id.appDrawerLayout);
-        NavigationView mNavigationView = (NavigationView) this.findViewById(R.id.appNavView);
+        this.mNavigationView = (NavigationView) this.findViewById(R.id.appNavView);
+            // This next line checks on the first 'NavigationView' item (initially selected by default)
+            this.mNavigationView.getMenu().getItem(0).setChecked(true);
             // This next line makes 'NavigationView' items react to interaction (defined in 'onNavigationItemSelected' method)
-            mNavigationView.setNavigationItemSelectedListener(this);
+            this.mNavigationView.setNavigationItemSelectedListener(this);
         //--------------------------------------
 
         //----- TOOLBAR -----
@@ -78,9 +85,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         //--------------------------------------
 
+        //----- SWIPE-REFRESH-LAYOUT -----
+        this.mSwipeRefresh = (SwipeRefreshLayout) this.findViewById(R.id.swipeContainer);
+            this.mSwipeRefresh.setOnRefreshListener(this);
+        //--------------------------------------
+
         //----- VIEWPAGER -----
         // A 'ViewPager' object allows to include swipe gesture to move across pages or fragments
-        MyPagerAdapter mPagerAdapter = new MyPagerAdapter(this.getSupportFragmentManager());
+        this.mPagerAdapter = new MyPagerAdapter(this.getSupportFragmentManager(), this);
         this.mViewPager = (ViewPager) this.findViewById(R.id.appViewPager);
             this.mViewPager.setAdapter(mPagerAdapter);
         //--------------------------------------
@@ -88,9 +100,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //----- TABLAYOUT -----
         // Getting a reference to the 'TabLayout' to add 'Tab' elements through a 'ViewPager' object
         final TabLayout appTabLayout = (TabLayout) this.findViewById(R.id.appTabLayout);
-        // 'setupWithViewPager' requires to override the 'getPageTitle' method from the 'FragmentPageAdapter' class
-        // The return value of the latter must be a List or array with the titles of the distinct tabs
-        appTabLayout.setupWithViewPager(this.mViewPager);
+            // 'setupWithViewPager' requires to override the 'getPageTitle' method from the 'FragmentPageAdapter' class
+            // The return value of the latter must be a List or array with the titles of the distinct tabs
+            appTabLayout.setupWithViewPager(this.mViewPager);
+            appTabLayout.setOnTabSelectedListener(this);
         //--------------------------------------
 
         //----- FAB -----
@@ -112,7 +125,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onCreateOptionsMenu(Menu menu)
     {
         MenuInflater mInflater = this.getMenuInflater();
-        mInflater.inflate(R.menu.menu_options, menu);
+            mInflater.inflate(R.menu.menu_options, menu);
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -123,7 +137,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // The 'android.R.id.home' identifier refers to the 'Hamburger'
         if (item.getItemId() == android.R.id.home)
         {
+            // 'GravityCompat.START' makes the trick in order to see the 'DrawerLayout' opening from left to right
             this.mDrawerLayout.openDrawer(GravityCompat.START);
+        }
+        else if (item.getItemId() == R.id.menu_option_refresh)
+        {
+            Log.i(MainActivity.TAG_MAIN_ACTIVITY, "Refresh option button tapped");
+
+            // The refreshing animation is enabled
+            this.mSwipeRefresh.setRefreshing(true);
+            // The next line calls 'getItem(position)' so that just the current 'Fragment' object is updated (feed is queried again)
+            this.mPagerAdapter.getItem(this.mViewPager.getCurrentItem());
+            // The refreshing animation is dismissed once we have finished
+            this.mSwipeRefresh.setRefreshing(false);
+
+        }
+        else if (item.getItemId() == R.id.menu_option_settings)
+        {
+            Log.i(MainActivity.TAG_MAIN_ACTIVITY, "Settings option button tapped");
+
         }
         else
             return false;
@@ -131,14 +163,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return true;
     }
 
+    // This next method is overridden from the 'NavigationView.OnNavigationItemSelectedListener' interface
     @Override
     public boolean onNavigationItemSelected(MenuItem item)
     {
-        // The selected item is highlighted
-        item.setChecked(true);
-        // Closing drawer on item click
-        this.mDrawerLayout.closeDrawers();
-
         if (item.getItemId() == R.id.navigation_option_actualidad)
             this.mViewPager.setCurrentItem(0);
         else if (item.getItemId() == R.id.navigation_option_formacion)
@@ -154,32 +182,58 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         else if (item.getItemId() == R.id.navigation_option_ferias)
             this.mViewPager.setCurrentItem(6);
 
+        // The selected item is highlighted
+        item.setChecked(true);
+        // Closing drawer on item click
+        this.mDrawerLayout.closeDrawers();
+
         return true;
     }
 
-    // The following methods correspond to 'TabLayout.OnTabSelectedListener'
+    // These next 3 methods are overridden from the 'TabLayout.OnTabSelectedListener' interface
     @Override
     public void onTabSelected(TabLayout.Tab tab)
     {
-        // When a tab is selected, the 'ViewPager' object gets updated
+        Log.i(MainActivity.TAG_MAIN_ACTIVITY, "Tab selected");
+
+        // 'ViewPager' is updated according to the selected tab
         this.mViewPager.setCurrentItem(tab.getPosition());
+        // The corresponding 'NavigationView' item is checked on according to the selected tab
+        this.mNavigationView.getMenu().getItem(tab.getPosition()).setChecked(true);
     }
 
     @Override
-    public void onTabUnselected(TabLayout.Tab tab) { }
+    public void onTabUnselected(TabLayout.Tab tab) {  }
 
     @Override
-    public void onTabReselected(TabLayout.Tab tab) { }
+    public void onTabReselected(TabLayout.Tab tab) {  }
+
+    // These next method is overridden from the 'SwipeRefreshLayout.OnRefreshListener' interface
+    @Override
+    public void onRefresh()
+    {
+        Log.i(MainActivity.TAG_MAIN_ACTIVITY, "Refresh gesture detected");
+        // The next line calls 'getItem(position)' so that just the current 'Fragment' object is updated (feed is queried again)
+        this.mPagerAdapter.getItem(this.mViewPager.getCurrentItem());
+        // The refreshing animation is dismissed once we have finished
+        this.mSwipeRefresh.setRefreshing(false);
+    }
 
     // This 'FragmentPageAdapter' instance will be used with the 'ViewPager' object
     private class MyPagerAdapter extends FragmentPagerAdapter
     {
         private static final int NUMBER_OF_TABS = 7;
 
-        public MyPagerAdapter(FragmentManager mFragManager) { super(mFragManager); }
+        private Context mContext;
+
+        public MyPagerAdapter(FragmentManager mFragManager, Context aContext)
+        {
+            super(mFragManager);
+            this.mContext = aContext;
+        }
 
         @Override
-        public Fragment getItem(int position)
+        public Fragment getItem(final int position)
         {
             switch (position)
             {
@@ -198,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 case 6:
                     return retrieveFeedCategoryFragment(getResources().getString(categoryArray[6]));
                 default:
-                    return new Fragment();
+                    return new Fragment();   // If no case is reached, an "empty" 'Fragment' object is returned
             }
         }
 
@@ -215,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             try
             {
-                FeedParser mParser = new FeedParser(mCoordLayout.getContext());
+                FeedParser mParser = new FeedParser(mDrawerLayout.getContext());
 
                 // Querying 'La Tahona' feed for 'aCategory' section
                 mFeedItemList = mParser.execute(MainActivity.LA_TAHONA_FEED_URL + aCategory + "/feed/").get();
