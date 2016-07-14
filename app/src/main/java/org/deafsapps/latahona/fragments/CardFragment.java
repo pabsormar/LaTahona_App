@@ -1,14 +1,17 @@
 package org.deafsapps.latahona.fragments;
 
 import android.content.Context;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,10 +51,13 @@ public class CardFragment extends Fragment
         ArrayList<FeedItem> itemList;
 
         // Creating a 'ViewHolder' to speed up the performance
-        public class MyCardViewHolder extends RecyclerView.ViewHolder
+        public class MyCardViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
         {
             private TextView title_TxtView;
             private TextView description_TxtView;
+            private ImageButton favourite_Btn;
+            private ImageButton share_Btn;
+            private boolean ic_favorite_pressed = false;
 
             public MyCardViewHolder(View itemView)
             {
@@ -59,6 +65,35 @@ public class CardFragment extends Fragment
 
                 this.title_TxtView = (TextView) itemView.findViewById(R.id.card_title);
                 this.description_TxtView = (TextView) itemView.findViewById(R.id.card_body);
+                this.favourite_Btn = (ImageButton) itemView.findViewById(R.id.favourite_button);
+                    this.favourite_Btn.setOnClickListener(this);
+                this.share_Btn = (ImageButton) itemView.findViewById(R.id.share_button);
+                    this.share_Btn.setOnClickListener(this);
+            }
+
+            @Override
+            public void onClick(View whichView)
+            {
+                if (whichView.getId() == R.id.favourite_button)
+                {
+                    Log.i(CardFragment.TAG_CARD_FRAGMENT, "favourite button clicked");
+
+                    // The next snippet toggles the 'Drawable' of the 'ImageButton' object
+                    if (!this.ic_favorite_pressed)
+                    {
+                        ((ImageButton) whichView).setImageResource(R.drawable.ic_favorite_red);
+                        this.ic_favorite_pressed = true;
+                    }
+                    else
+                    {
+                        ((ImageButton) whichView).setImageResource(R.drawable.ic_favorite_white);
+                        this.ic_favorite_pressed = false;
+                    }
+                }
+                else if (whichView.getId() == R.id.share_button)
+                {
+                    Log.i(CardFragment.TAG_CARD_FRAGMENT, "share button clicked");
+                }
             }
         }
 

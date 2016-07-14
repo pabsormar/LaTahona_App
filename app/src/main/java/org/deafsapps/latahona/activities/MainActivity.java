@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //----- VIEWPAGER -----
         // A 'ViewPager' object allows to include swipe gesture to move across pages or fragments
-        this.mPagerAdapter = new MyPagerAdapter(this.getSupportFragmentManager(), this);
+        this.mPagerAdapter = new MyPagerAdapter(this.getSupportFragmentManager(), this.mSwipeRefresh);
         this.mViewPager = (ViewPager) this.findViewById(R.id.appViewPager);
             this.mViewPager.setAdapter(mPagerAdapter);
         //--------------------------------------
@@ -224,12 +224,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     {
         private static final int NUMBER_OF_TABS = 7;
 
-        private Context mContext;
+        private SwipeRefreshLayout mSwipeRefreshLayout;
 
-        public MyPagerAdapter(FragmentManager mFragManager, Context aContext)
+        public MyPagerAdapter(FragmentManager mFragManager, SwipeRefreshLayout aSwipeRefreshLayout)
         {
             super(mFragManager);
-            this.mContext = aContext;
+            this.mSwipeRefreshLayout = aSwipeRefreshLayout;
         }
 
         @Override
@@ -285,7 +285,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Log.i(MainActivity.TAG_MAIN_ACTIVITY, "Feed from " + aCategory + " category loaded");
                     return mFragment;
                 }
-            } catch (InterruptedException | ExecutionException e) { e.printStackTrace(); }
+            }
+            catch (InterruptedException | ExecutionException e) { e.printStackTrace(); }
 
             // If the feed has not been successfully queried, a 'dummy' Fragment object is returned
             return new Fragment();
