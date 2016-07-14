@@ -17,6 +17,7 @@ public class FeedItem implements Parcelable
     private List<String> itemCategory = new ArrayList<>();
     private String itemDescription;
     private String itemContent;
+    private boolean isFavorite;
 
     public FeedItem() { }
 
@@ -29,6 +30,7 @@ public class FeedItem implements Parcelable
         this.itemCategory = pc.readArrayList(String.class.getClassLoader());
         this.itemDescription = pc.readString();
         this.itemContent = pc.readString();
+        this.isFavorite = pc.readInt() == 1;
     }
 
     public String getItemTitle() { return itemTitle; }
@@ -50,6 +52,9 @@ public class FeedItem implements Parcelable
     public String getItemContent() { return itemContent; }
     public void setItemContent(String itemContent) { this.itemContent = itemContent; }
 
+    public boolean isFavorite() { return isFavorite; }
+    public void setFavorite(boolean favorite) { isFavorite = favorite; }
+
     @Override
     public int describeContents() { return 0; }
 
@@ -64,6 +69,7 @@ public class FeedItem implements Parcelable
         dest.writeList(this.itemCategory);
         dest.writeString(this.itemDescription);
         dest.writeString(this.itemContent);
+        dest.writeInt(this.isFavorite ? 1 : 0);
     }
 
     // Static field used to regenerate object, individually or as arrays
