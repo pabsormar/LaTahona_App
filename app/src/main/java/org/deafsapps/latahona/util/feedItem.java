@@ -17,7 +17,7 @@ public class FeedItem implements Parcelable
     private List<String> itemCategory = new ArrayList<>();
     private String itemDescription;
     private String itemContent;
-    private boolean isFavorite;
+    private boolean isFavorite = false;
 
     public FeedItem() { }
 

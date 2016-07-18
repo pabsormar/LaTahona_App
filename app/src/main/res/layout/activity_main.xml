@@ -37,7 +37,6 @@
         </android.support.design.widget.AppBarLayout>
 
         <!-- The following snippet encloses the 'ViewPager' inside a 'SwipeRefreshLayout which allows to define actions on a vertical drag gesture -->
-        <!-- The 'layout_behavior' attribute is mandatory to allow Fragments to be placed within the 'ViewPager' -->
         <!--
         <android.support.v4.widget.SwipeRefreshLayout
             android:layout_width="match_parent"
@@ -45,10 +44,12 @@
             android:id="@+id/swipeContainer"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
         -->
-            <android.support.v4.view.ViewPager
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/appViewPager"/>
+        <!-- The 'layout_behavior' attribute is mandatory to allow Fragments to be placed within the 'ViewPager' -->
+        <android.support.v4.view.ViewPager
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/appViewPager"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
         <!-- The 'layout_behavior' MUST be applied to a direct child of 'CoordinatorLayout' -->
         <android.support.design.widget.FloatingActionButton

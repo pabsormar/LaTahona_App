@@ -1,7 +1,6 @@
 package org.deafsapps.latahona.fragments;
 
 import android.content.Context;
-import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,37 +17,64 @@ import android.widget.Toast;
 import org.deafsapps.latahona.R;
 import org.deafsapps.latahona.util.FeedItem;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class CardFragment extends Fragment
 {
     private static final String TAG_CARD_FRAGMENT = "In-CardFragment";
 
+    private List<FeedItem> mAdapterDataList;
+
+    /*public RecyclerView getmRecyclerView() {
+        return mRecyclerView;
+    }*/
+
+    private RecyclerView mRecyclerView;
+
     // Required empty public constructor
-    public CardFragment() { }
+    public CardFragment() { this.mAdapterDataList = null; }
+
+    // This static constructor is preferred, since it potentially allows to assign a 'Bundle' object and return the 'Fragment' itself
+    public static CardFragment newInstance() { return new CardFragment(); }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        // Retrieving data 'Bundle' sent when the 'Fragment' object was instantiated
-        final ArrayList<FeedItem> mList = this.getArguments().getParcelableArrayList(this.getResources().getResourceName(R.string.feed_data_name));
+        Log.i(CardFragment.TAG_CARD_FRAGMENT, "CardFragment 'onCreateView'");
 
-        // Inflate the layout for this fragment
-        RecyclerView recyclerView = (RecyclerView) inflater.inflate(R.layout.recycler_view_layout, container, false);
-        CardContentAdapter mContAdapter = new CardContentAdapter(this.getContext(), mList);
+        // 'mList' can be null, which means no data is shown on the 'Fragment' object ('getItemCount' = 0)
+        // In fact, all 'CardFragment' instances are empty ('mAdapterDataList' = null) at the beginning
+        CardContentAdapter mContAdapter = new CardContentAdapter(this.getContext(), this.mAdapterDataList);
 
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this.getContext()));
-        recyclerView.setAdapter(mContAdapter);
+        // Inflate the layout for this 'Fragment'
+        this.mRecyclerView = (RecyclerView) inflater.inflate(R.layout.recycler_view_layout, container, false);
+        this.mRecyclerView.setHasFixedSize(true);
+        this.mRecyclerView.setLayoutManager(new LinearLayoutManager(this.getContext()));
+        this.mRecyclerView.setAdapter(mContAdapter);
 
-        return recyclerView;
+        return this.mRecyclerView;
+    }
+
+    // This method allows to update the 'Fragment' object's content (used when the AsyncTask instance has finished - onPostExecute())
+    public void updateFragment(List<FeedItem> mList)
+    {
+        Log.i(CardFragment.TAG_CARD_FRAGMENT, "'updateFragment'");
+
+        // 'mAdapterDataList' is updated, so that the next time 'onCreateView' is called, the 'RecyclerView.Adapter' does show some info
+        this.mAdapterDataList = mList;
+        // Now we update the 'RecyclerView.Adapter' field related to the loaded data, and notify it
+        // This makes the 'Fragment' in the foreground to get updated live
+        ((CardContentAdapter) this.mRecyclerView.getAdapter()).setItemList(mList);
+        this.mRecyclerView.getAdapter().notifyDataSetChanged();
     }
 
     // Adapter to display recycler view
     private class CardContentAdapter extends RecyclerView.Adapter<CardContentAdapter.MyCardViewHolder>
     {
-        Context mContext;
-        ArrayList<FeedItem> itemList;
+        private static final String TAG_CARD_CONTENT_ADAPTER = "In-CardContentAdapter";
+
+        private Context mContext;
+        private List<FeedItem> itemList;
 
         // Creating a 'ViewHolder' to speed up the performance
         public class MyCardViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
@@ -57,6 +83,7 @@ public class CardFragment extends Fragment
             private TextView description_TxtView;
             private ImageButton favourite_Btn;
             private ImageButton share_Btn;
+
             private boolean ic_favorite_pressed = false;
 
             public MyCardViewHolder(View itemView)
@@ -71,6 +98,9 @@ public class CardFragment extends Fragment
                     this.share_Btn.setOnClickListener(this);
             }
 
+            public boolean isIc_favorite_pressed() { return this.ic_favorite_pressed; }
+            public void setIc_favorite_pressed(boolean ic_favorite_pressed) { this.ic_favorite_pressed = ic_favorite_pressed; }
+
             @Override
             public void onClick(View whichView)
             {
@@ -82,27 +112,29 @@ public class CardFragment extends Fragment
                     if (!this.ic_favorite_pressed)
                     {
                         ((ImageButton) whichView).setImageResource(R.drawable.ic_favorite_red);
-                        this.ic_favorite_pressed = true;
+                        this.setIc_favorite_pressed(true);
                     }
                     else
                     {
                         ((ImageButton) whichView).setImageResource(R.drawable.ic_favorite_white);
-                        this.ic_favorite_pressed = false;
+                        this.setIc_favorite_pressed(false);
                     }
                 }
                 else if (whichView.getId() == R.id.share_button)
                 {
-                    Log.i(CardFragment.TAG_CARD_FRAGMENT, "share button clicked");
+                    Log.i(CardContentAdapter.TAG_CARD_CONTENT_ADAPTER, "share button clicked");
                 }
             }
         }
 
         // Provide a suitable constructor (depends on the kind of dataset)
-        public CardContentAdapter(Context context, ArrayList<FeedItem> objects)
+        public CardContentAdapter(Context aContext, List<FeedItem> objectList)
         {
-            this.mContext = context;
-            this.itemList = objects;
+            this.mContext = aContext;
+            this.itemList = objectList;
         }
+
+        public void setItemList(List<FeedItem> itemList) { this.itemList = itemList; }
 
         @Override
         public MyCardViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
@@ -123,13 +155,14 @@ public class CardFragment extends Fragment
         @Override
         public void onBindViewHolder(MyCardViewHolder holder, int position)
         {
-            // get element from your dataset at this position and replace the contents of the view with that element
+            // get element from the dataset at this position and replace the contents of the view with that element
             // The piece 'Html.fromHtml()' allows to deal with HTML 'CDATA' sections
             holder.title_TxtView.setText(Html.fromHtml(this.itemList.get(position).getItemTitle()));
             holder.description_TxtView.setText(Html.fromHtml(this.itemList.get(position).getItemDescription()));
         }
 
         // Return the size of your data-set (invoked by the layout manager)
+        // If the data-set is null, it returns 0 and 'onBindViewHolder' is never called
         @Override
         public int getItemCount() { return this.itemList == null ? 0 : this.itemList.size(); }
     }

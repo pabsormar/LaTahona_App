@@ -6,9 +6,11 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 
 import org.deafsapps.latahona.R;
+import org.deafsapps.latahona.fragments.CardFragment;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -33,27 +35,42 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
 
     private Context threadContext;
     private ProgressDialog mProgDialog;
+    private int fragmentPosition;
+    private Fragment callingFragment;
 
-    public FeedParser(Context mContext)
+    // This interface will allow to return a 'FeedItem' list to the main Activity
+    public interface OnAsyncResponse
+    {
+        void onResponse(Fragment fragment, int position);
+    }
+    // The interface is implemented by the entity which is receiving the response, and a field is created in the "sender"
+    private OnAsyncResponse mAsyncResponse;
+
+    public FeedParser(Context mContext, Fragment mFragment)
     {
         this.threadContext = mContext;
         this.mProgDialog = new ProgressDialog(mContext);
+        this.mAsyncResponse = (OnAsyncResponse) mContext;
+        this.callingFragment = mFragment;
     }
-/*
+
     // Shows progress dialog to "keep the app alive"
     protected void onPreExecute()
     {
         this.mProgDialog.setMessage("Loading...");
         this.mProgDialog.show();
     }
-*/
+
     @Override
     protected ArrayList<FeedItem> doInBackground(String[] params)
     {
         try
         {
             // The input arguments are fetched in order
+            Log.i(FeedParser.TAG_FEED_PARSER, "URL to be queried: " + params[0]);
             URL myUrl = new URL(params[0]);   // Throws 'MalformedURLException'
+            this.fragmentPosition = Integer.valueOf(params[1]);
+
             HttpURLConnection myConnection = (HttpURLConnection) myUrl.openConnection();   // Throws 'IOException'
                 myConnection.setRequestMethod("GET");
                 myConnection.setDoInput(true);
@@ -86,15 +103,19 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
     protected void onPostExecute(ArrayList<FeedItem> mList)
     {
         super.onPostExecute(mList);
-/*
+
         // 'ProgressDialog' has to be dismissed
         if (this.mProgDialog.isShowing())
             this.mProgDialog.dismiss();
-*/
+
         if (mList != null)
         {
-            Log.i(FeedParser.TAG_FEED_PARSER, "Feed loaded");
             Snackbar.make(((Activity) this.threadContext).findViewById(R.id.appCoordLayout), "Feed loaded", Snackbar.LENGTH_SHORT).show();
+
+            // We now update the 'Fragment' object on display
+            ((CardFragment) this.callingFragment).updateFragment(mList);
+            // Moreover, we need to update the Adapter used by the 'ViewPager' object
+            this.mAsyncResponse.onResponse(this.callingFragment, this.fragmentPosition);
         }
         else
         {
