@@ -1,5 +1,7 @@
 package org.deafsapps.latahona.activities;
 
+import android.app.Activity;
+import android.content.Context;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -25,7 +27,10 @@ import android.view.View;
 
 import org.deafsapps.latahona.R;
 import org.deafsapps.latahona.fragments.CardFragment;
+import org.deafsapps.latahona.util.FeedItem;
 import org.deafsapps.latahona.util.FeedParser;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, NavigationView.OnNavigationItemSelectedListener,
                                                                     TabLayout.OnTabSelectedListener, FeedParser.OnAsyncResponse
@@ -37,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private DrawerLayout mDrawerLayout;
     private NavigationView mNavigationView;
     private ViewPager mViewPager;
+    private static Snackbar mLoadingSnackbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -79,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //----- VIEWPAGER -----
         // A 'ViewPager' object allows to include swipe gesture to move across pages or fragments
         this.mViewPager = (ViewPager) this.findViewById(R.id.appViewPager);
-        final PagerAdapter mPagerAdapter = new MyPagerAdapter(this.getSupportFragmentManager());
+        final PagerAdapter mPagerAdapter = new MyPagerAdapter(this.getSupportFragmentManager(), this);
             this.mViewPager.setAdapter(mPagerAdapter);
         //--------------------------------------
 
@@ -191,23 +197,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     // This method is overridden from the 'FeedParser.OnAsyncResponse' interface
     @Override
-    public void onResponse(Fragment updatedFragment, int fragmentPosition)
+    public void onResponse(List<FeedItem> updatedItemList, int fragmentPosition, String updateDate)
     {
-        if (updatedFragment != null)
-        {
-            Log.i(MainActivity.TAG_MAIN_ACTIVITY, "At AsyncTask 'onResponse', list NOT NULL");
+        Log.i(MainActivity.TAG_MAIN_ACTIVITY, "'onResponse'");
 
-            this.updatePagerFragment(fragmentPosition, updatedFragment);
-        }
-        else
-            Log.w(MainActivity.TAG_MAIN_ACTIVITY, "At AsyncTask 'onResponse', list NULL");
-    }
-
-    private void updatePagerFragment(int fragmentPosition, Fragment updatedFragment)
-    {
-        Log.i(MainActivity.TAG_MAIN_ACTIVITY, "'updatePagerFragment'");
-
-        ((MyPagerAdapter) this.mViewPager.getAdapter()).getmFragmentList().put(fragmentPosition, updatedFragment);
+        // This next line is where the 'Fragment' in the foreground gets updated.
+        ((CardFragment) ((MyPagerAdapter) this.mViewPager.getAdapter()).getmFragmentList().get(fragmentPosition)).updateFragment(updatedItemList, updateDate);
+        // This next line is where 'MyPagerAdapter' data list gets updated, so that future queries can be locally loaded
+        ((CardFragment.CardContentAdapter) ((CardFragment) ((MyPagerAdapter) this.mViewPager.getAdapter()).getmFragmentList().get(fragmentPosition)).getmRecyclerView().getAdapter()).setItemList(updatedItemList);
+        // 'Snackbar' object is dismissed
+        mLoadingSnackbar.dismiss();
     }
 
     // This 'FragmentStatePageAdapter' instance will be used with the 'ViewPager' object
@@ -223,13 +222,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // This next 'SparseArray' will store the 'Fragment' objects already downloaded from the Internet, so that they can be loaded locally later
         private SparseArrayCompat<Fragment> mRegisteredFragments;
 
-        public MyPagerAdapter(FragmentManager mManager)
+        private Context mainUIContext;
+
+        public MyPagerAdapter(FragmentManager mManager, Context mContext)
         {
             super(mManager);
+            this.mainUIContext = mContext;
             this.mRegisteredFragments = new SparseArrayCompat<>();
 
             Log.i(MyPagerAdapter.TAG_MY_PAGER_ADAPTER, "'MyPagerAdapter' instance created");
         }
+
+        public Context getMainUIContext() { return this.mainUIContext; }
 
         @Override
         public Fragment getItem(int position)
@@ -247,13 +251,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     this.getmFragmentList().put(position, mFragment);
 
                 // The information is queried from the Internet
-                FeedParser mParser = new FeedParser(MainActivity.this, this.getmFragmentList().get(position));
+                FeedParser mParser = new FeedParser(MainActivity.this);
                     mParser.execute(MainActivity.LA_TAHONA_FEED_URL + getResources().getString(categoryArray[position]) + "/feed/", String.valueOf(position));
+
+                mLoadingSnackbar = Snackbar.make(((Activity) this.getMainUIContext()).findViewById(R.id.appCoordLayout), "Loading...", Snackbar.LENGTH_INDEFINITE);
+                    mLoadingSnackbar.show();
             }
             else
                 Log.i(MyPagerAdapter.TAG_MY_PAGER_ADAPTER, "Loading from local");
 
-                return this.getmFragmentList().get(position);
+            return this.getmFragmentList().get(position);
         }
 
         @Override

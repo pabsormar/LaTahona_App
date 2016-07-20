@@ -1,16 +1,13 @@
 package org.deafsapps.latahona.util;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 
 import org.deafsapps.latahona.R;
-import org.deafsapps.latahona.fragments.CardFragment;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -19,7 +16,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
 {
@@ -34,31 +34,31 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
     private static final String CONTENT = "content:encoded";
 
     private Context threadContext;
-    private ProgressDialog mProgDialog;
+    //private ProgressDialog mProgDialog;
     private int fragmentPosition;
-    private Fragment callingFragment;
 
     // This interface will allow to return a 'FeedItem' list to the main Activity
     public interface OnAsyncResponse
     {
-        void onResponse(Fragment fragment, int position);
+        void onResponse(List<FeedItem> dataItemList, int position, String date);
     }
     // The interface is implemented by the entity which is receiving the response, and a field is created in the "sender"
     private OnAsyncResponse mAsyncResponse;
 
-    public FeedParser(Context mContext, Fragment mFragment)
+    public FeedParser(Context mContext)
     {
         this.threadContext = mContext;
-        this.mProgDialog = new ProgressDialog(mContext);
+        //this.mProgDialog = new ProgressDialog(mContext);
         this.mAsyncResponse = (OnAsyncResponse) mContext;
-        this.callingFragment = mFragment;
+        //this.callingFragment = mFragment;
     }
 
     // Shows progress dialog to "keep the app alive"
     protected void onPreExecute()
-    {
+    {   /*
         this.mProgDialog.setMessage("Loading...");
         this.mProgDialog.show();
+        */
     }
 
     @Override
@@ -104,22 +104,23 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
     {
         super.onPostExecute(mList);
 
+        /*
         // 'ProgressDialog' has to be dismissed
         if (this.mProgDialog.isShowing())
             this.mProgDialog.dismiss();
+        */
 
         if (mList != null)
         {
-            Snackbar.make(((Activity) this.threadContext).findViewById(R.id.appCoordLayout), "Feed loaded", Snackbar.LENGTH_SHORT).show();
+            Log.i(FeedParser.TAG_FEED_PARSER, "Feed " + fragmentPosition + " loaded");
 
-            // We now update the 'Fragment' object on display
-            ((CardFragment) this.callingFragment).updateFragment(mList);
-            // Moreover, we need to update the Adapter used by the 'ViewPager' object
-            this.mAsyncResponse.onResponse(this.callingFragment, this.fragmentPosition);
+            // Once finished, 'onResponse' interface is employed to send data back to the 'MainActivity'
+            this.mAsyncResponse.onResponse(mList, this.fragmentPosition, "Actualizado " + new SimpleDateFormat("d MMM yyyy HH:mm").format(new Date()));
         }
         else
         {
             Log.w(FeedParser.TAG_FEED_PARSER, "Error loading feed");
+            // This 'Snackbar' will dismiss the one currently on display (saying "Loading...")
             Snackbar.make(((Activity) this.threadContext).findViewById(R.id.appCoordLayout), "Error loading feed", Snackbar.LENGTH_SHORT).show();
         }
     }

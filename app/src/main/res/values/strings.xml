@@ -11,6 +11,7 @@
 
     <!-- 'string' values relating to the feed -->
     <string name="feed_data_name">feed data</string>
+    <string name="feed_category_favoritos">Favoritos</string>
     <string name="feed_category_actualidad">Actualidad</string>
     <string name="feed_category_formacion">Formación</string>
     <string name="feed_category_recetas">Recetas</string>
