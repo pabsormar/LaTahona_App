@@ -24,6 +24,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 
 import org.deafsapps.latahona.R;
 import org.deafsapps.latahona.fragments.CardFragment;
@@ -37,6 +38,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 {
     private static final String TAG_MAIN_ACTIVITY = "In-MainActivity";
     private static final String LA_TAHONA_FEED_URL = "http://www.revistalatahona.com/category/";
+    private static int[] categoryArray = {R.string.feed_category_favoritos, R.string.feed_category_actualidad, R.string.feed_category_formacion, R.string.feed_category_recetas, R.string.feed_category_nacional,
+            R.string.feed_category_internacional, R.string.feed_category_asociaciones, R.string.feed_category_ferias};
 
     private CoordinatorLayout mCoordLayout;
     private DrawerLayout mDrawerLayout;
@@ -59,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.mNavigationView = (NavigationView) this.findViewById(R.id.appNavView);
             // This next line checks on the first 'NavigationView' item (initially selected by default)
         if (this.mNavigationView != null)
-            this.mNavigationView.getMenu().getItem(0).setChecked(true);
+            this.mNavigationView.getMenu().getItem(1).setChecked(true);
         // This next line makes 'NavigationView' items react to interaction (defined in 'onNavigationItemSelected' method)
         if (this.mNavigationView != null)
             this.mNavigationView.setNavigationItemSelectedListener(this);
@@ -87,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.mViewPager = (ViewPager) this.findViewById(R.id.appViewPager);
         final PagerAdapter mPagerAdapter = new MyPagerAdapter(this.getSupportFragmentManager(), this);
             this.mViewPager.setAdapter(mPagerAdapter);
+            this.mViewPager.setCurrentItem(1);
         //--------------------------------------
 
         //----- TABLAYOUT -----
@@ -138,7 +142,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         else if (item.getItemId() == R.id.menu_option_refresh)
         {
-            Log.i(MainActivity.TAG_MAIN_ACTIVITY, "Refresh option button tapped");
+            Log.i(MainActivity.TAG_MAIN_ACTIVITY, "Refresh option button tapped, page: " + this.mViewPager.getCurrentItem());
+
+            int refreshPage = this.mViewPager.getCurrentItem();
+
+            mLoadingSnackbar = Snackbar.make(this.findViewById(R.id.appCoordLayout), "Cargando \"" + this.getResources().getString(this.categoryArray[refreshPage]) + "\"...", Snackbar.LENGTH_INDEFINITE);
+            mLoadingSnackbar.show();
+
+            this.parseFeed(MainActivity.LA_TAHONA_FEED_URL + getResources().getString(MainActivity.categoryArray[refreshPage]) + "/feed/", String.valueOf(refreshPage));
         }
         else if (item.getItemId() == R.id.menu_option_settings)
         {
@@ -154,20 +165,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean onNavigationItemSelected(MenuItem item)
     {
-        if (item.getItemId() == R.id.navigation_option_actualidad)
+        if (item.getItemId() == R.id.navigation_option_favoritos)
             this.mViewPager.setCurrentItem(0);
-        else if (item.getItemId() == R.id.navigation_option_formacion)
+        else if (item.getItemId() == R.id.navigation_option_actualidad)
             this.mViewPager.setCurrentItem(1);
-        else if (item.getItemId() == R.id.navigation_option_recetas)
+        else if (item.getItemId() == R.id.navigation_option_formacion)
             this.mViewPager.setCurrentItem(2);
-        else if (item.getItemId() == R.id.navigation_option_nacional)
+        else if (item.getItemId() == R.id.navigation_option_recetas)
             this.mViewPager.setCurrentItem(3);
-        else if (item.getItemId() == R.id.navigation_option_internacional)
+        else if (item.getItemId() == R.id.navigation_option_nacional)
             this.mViewPager.setCurrentItem(4);
-        else if (item.getItemId() == R.id.navigation_option_asociaciones)
+        else if (item.getItemId() == R.id.navigation_option_internacional)
             this.mViewPager.setCurrentItem(5);
-        else if (item.getItemId() == R.id.navigation_option_ferias)
+        else if (item.getItemId() == R.id.navigation_option_asociaciones)
             this.mViewPager.setCurrentItem(6);
+        else if (item.getItemId() == R.id.navigation_option_ferias)
+            this.mViewPager.setCurrentItem(7);
 
         // The selected item is highlighted
         item.setChecked(true);
@@ -209,6 +222,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mLoadingSnackbar.dismiss();
     }
 
+    public void parseFeed(String urlFeed, String fragmentPosition)
+    {
+        // The information is queried from the Internet
+        FeedParser mParser = new FeedParser(MainActivity.this);
+        mParser.execute(urlFeed, fragmentPosition);
+    }
+
     // This 'FragmentStatePageAdapter' instance will be used with the 'ViewPager' object
     // It makes the system not to save every single page, but the current, the one right after, and the one right before (difference with 'FragmentPagerAdapter'
     // That means that 'getItem' is called rather often, so it is required to program the logic which makes the loading happen
@@ -217,11 +237,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         private static final String TAG_MY_PAGER_ADAPTER = "In-MyPagerAdapter";
         private static final int NUMBER_OF_TABS = 7;
 
-        private int[] categoryArray = {R.string.feed_category_actualidad, R.string.feed_category_formacion, R.string.feed_category_recetas, R.string.feed_category_nacional,
-                R.string.feed_category_internacional, R.string.feed_category_asociaciones, R.string.feed_category_ferias};
         // This next 'SparseArray' will store the 'Fragment' objects already downloaded from the Internet, so that they can be loaded locally later
         private SparseArrayCompat<Fragment> mRegisteredFragments;
-
         private Context mainUIContext;
 
         public MyPagerAdapter(FragmentManager mManager, Context mContext)
@@ -237,9 +254,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public Fragment getItem(int position)
-        {
+        {Log.e(MyPagerAdapter.TAG_MY_PAGER_ADAPTER, "'getItem'");
             Log.i(MyPagerAdapter.TAG_MY_PAGER_ADAPTER, "getItem, Page: " + position);
             Log.i(MyPagerAdapter.TAG_MY_PAGER_ADAPTER, "Previously loaded?: " + (this.getmFragmentList().get(position) != null));
+
 
             if (this.getmFragmentList().get(position) == null)
             {
@@ -247,34 +265,54 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 // This new 'CardFragment' instance will have no data to load by default (it won't show any info on screen)
                 Fragment mFragment = CardFragment.newInstance();
-                    // The 'Fragment' instance is saved in the 'SparseArray' field for later
-                    this.getmFragmentList().put(position, mFragment);
+                // The 'Fragment' instance is saved in the 'SparseArray' field for later
+                this.getmFragmentList().put(position, mFragment);
 
-                // The information is queried from the Internet
-                FeedParser mParser = new FeedParser(MainActivity.this);
-                    mParser.execute(MainActivity.LA_TAHONA_FEED_URL + getResources().getString(categoryArray[position]) + "/feed/", String.valueOf(position));
+                if (position != 0)
+                {
+                    // This next line does parse the feed in a different thread (AsyncTask)
+                    parseFeed(MainActivity.LA_TAHONA_FEED_URL + getResources().getString(MainActivity.categoryArray[position]) + "/feed/", String.valueOf(position));
 
-                mLoadingSnackbar = Snackbar.make(((Activity) this.getMainUIContext()).findViewById(R.id.appCoordLayout), "Loading...", Snackbar.LENGTH_INDEFINITE);
+                    mLoadingSnackbar = Snackbar.make(((Activity) this.getMainUIContext()).findViewById(R.id.appCoordLayout), "Cargando...", Snackbar.LENGTH_INDEFINITE);
                     mLoadingSnackbar.show();
-            }
-            else
+                }
+            } else
                 Log.i(MyPagerAdapter.TAG_MY_PAGER_ADAPTER, "Loading from local");
 
             return this.getmFragmentList().get(position);
         }
 
         @Override
-        public int getItemPosition(Object object)
+        public Object instantiateItem(ViewGroup container, int position)
         {
-            return super.getItemPosition(object);
+            Log.e(MainActivity.TAG_MAIN_ACTIVITY, "'instantiateItem'");
+
+            //this.updateFavoritosTab(position);
+
+
+
+
+            return super.instantiateItem(container, position);
+        }
+
+        private void updateFavoritosTab(int fragmentPosition)
+        {
+
+
+            // This next line is where the 'Fragment' in the foreground gets updated.
+            //((CardFragment) ((MyPagerAdapter) MainActivity.this.mViewPager.getAdapter()).getmFragmentList().get(fragmentPosition)).updateFragment(updatedItemList, updateDate);
         }
 
         @Override
-        public int getCount() { return MyPagerAdapter.NUMBER_OF_TABS; }
+        public int getItemPosition(Object object) { return super.getItemPosition(object); }
 
         @Override
-        public CharSequence getPageTitle(int position) { return getResources().getString(this.categoryArray[position]); }
+        public int getCount() { return MyPagerAdapter.NUMBER_OF_TABS + 1; }   // '+1' since "Favoritos" category is at the beginning
+
+        @Override
+        public CharSequence getPageTitle(int position) { return getResources().getString(MainActivity.categoryArray[position]); }
 
         public SparseArrayCompat<Fragment> getmFragmentList() { return this.mRegisteredFragments; }
+        public void setmRegisteredFragments(SparseArrayCompat<Fragment> mRegisteredFragments) { this.mRegisteredFragments = mRegisteredFragments; }
     }
 }

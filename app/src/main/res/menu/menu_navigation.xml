@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <group android:checkableBehavior="single">
+    <group
+        android:id="@+id/favGroup"
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/navigation_option_favoritos"
+            android:icon="@drawable/ic_favorite_24dp"
+            android:tint="@android:color/darker_gray"
+            android:title="@string/feed_category_favoritos" />
+    </group>
+
+    <group
+        android:id="@+id/restGroup"
+        android:checkableBehavior="single">
         <item
             android:id="@+id/navigation_option_actualidad"
             android:icon="@drawable/ic_actualidad_24dp"

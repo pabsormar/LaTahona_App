@@ -27,11 +27,11 @@ public class CardFragment extends Fragment
     private String mDataListDate;
     private RecyclerView mRecyclerView;
 
-    // Required empty public constructor
-    public CardFragment() { this.mAdapterDataList = null; this.mDataListDate = null; }
-
     // This static constructor is preferred, since it potentially allows to assign a 'Bundle' object and return the 'Fragment' itself
     public static CardFragment newInstance() { return new CardFragment(); }
+
+    // Required empty public constructor
+    public CardFragment() { this.mAdapterDataList = null; this.mDataListDate = null; }
 
     public RecyclerView getmRecyclerView() { return mRecyclerView; }
 
@@ -99,8 +99,6 @@ public class CardFragment extends Fragment
             private ImageButton favourite_Btn;
             private ImageButton share_Btn;
 
-            private boolean ic_favorite_pressed = false;
-
             public MyCardViewHolder(View itemView)
             {
                 super(itemView);
@@ -113,9 +111,6 @@ public class CardFragment extends Fragment
                     this.share_Btn.setOnClickListener(this);
             }
 
-            public boolean isIc_favorite_pressed() { return this.ic_favorite_pressed; }
-            public void setIc_favorite_pressed(boolean ic_favorite_pressed) { this.ic_favorite_pressed = ic_favorite_pressed; }
-
             @Override
             public void onClick(View whichView)
             {
@@ -123,17 +118,7 @@ public class CardFragment extends Fragment
                 {
                     Log.i(CardFragment.TAG_CARD_FRAGMENT, "favourite button clicked");
 
-                    // The next snippet toggles the 'Drawable' of the 'ImageButton' object
-                    if (!this.ic_favorite_pressed)
-                    {
-                        ((ImageButton) whichView).setImageResource(R.drawable.ic_favorite_red);
-                        this.setIc_favorite_pressed(true);
-                    }
-                    else
-                    {
-                        ((ImageButton) whichView).setImageResource(R.drawable.ic_favorite_white);
-                        this.setIc_favorite_pressed(false);
-                    }
+                    Toast.makeText(whichView.getContext(), "Added to \"Favoritos\"", Toast.LENGTH_SHORT).show();
                 }
                 else if (whichView.getId() == R.id.share_button)
                 {
@@ -171,7 +156,8 @@ public class CardFragment extends Fragment
                 View viewRow = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_view_custom_layout, parent, false);
                 viewRow.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(View v) {
+                    public void onClick(View v)
+                    {
                         Toast.makeText(mContext, "Clicked", Toast.LENGTH_SHORT).show();
                     }
                 });
