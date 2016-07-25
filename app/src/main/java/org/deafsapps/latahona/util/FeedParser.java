@@ -20,6 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
 {
@@ -115,7 +116,7 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
             Log.i(FeedParser.TAG_FEED_PARSER, "Feed " + fragmentPosition + " loaded");
 
             // Once finished, 'onResponse' interface is employed to send data back to the 'MainActivity'
-            this.mAsyncResponse.onResponse(mList, this.fragmentPosition, "Actualizado " + new SimpleDateFormat("d MMM yyyy HH:mm").format(new Date()));
+            this.mAsyncResponse.onResponse(mList, this.fragmentPosition, "Actualizado " + new SimpleDateFormat("d MMM yyyy HH:mm", Locale.getDefault()).format(new Date()));
         }
         else
         {

@@ -24,17 +24,18 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 
 import org.deafsapps.latahona.R;
 import org.deafsapps.latahona.fragments.CardFragment;
 import org.deafsapps.latahona.util.FeedItem;
 import org.deafsapps.latahona.util.FeedParser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, NavigationView.OnNavigationItemSelectedListener,
-                                                                    TabLayout.OnTabSelectedListener, FeedParser.OnAsyncResponse
+                                                                    TabLayout.OnTabSelectedListener, FeedParser.OnAsyncResponse,
+                                                                    CardFragment.OnFragment2Favoritos
 {
     private static final String TAG_MAIN_ACTIVITY = "In-MainActivity";
     private static final String LA_TAHONA_FEED_URL = "http://www.revistalatahona.com/category/";
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private NavigationView mNavigationView;
     private ViewPager mViewPager;
     private static Snackbar mLoadingSnackbar;
+    private List<FeedItem> mFavItemList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -146,10 +148,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             int refreshPage = this.mViewPager.getCurrentItem();
 
-            mLoadingSnackbar = Snackbar.make(this.findViewById(R.id.appCoordLayout), "Cargando \"" + this.getResources().getString(this.categoryArray[refreshPage]) + "\"...", Snackbar.LENGTH_INDEFINITE);
-            mLoadingSnackbar.show();
+            // the 'Refresh' option does not make sense for the first page ("Favoritos")
+            if (refreshPage != 0)
+            {
+                mLoadingSnackbar = Snackbar.make(this.findViewById(R.id.appCoordLayout), "Cargando \"" + this.getResources().getString(this.categoryArray[refreshPage]) + "\"...", Snackbar.LENGTH_INDEFINITE);
+                mLoadingSnackbar.show();
 
-            this.parseFeed(MainActivity.LA_TAHONA_FEED_URL + getResources().getString(MainActivity.categoryArray[refreshPage]) + "/feed/", String.valueOf(refreshPage));
+                this.parseFeed(MainActivity.LA_TAHONA_FEED_URL + getResources().getString(MainActivity.categoryArray[refreshPage]) + "/feed/", String.valueOf(refreshPage));
+            }
         }
         else if (item.getItemId() == R.id.menu_option_settings)
         {
@@ -214,6 +220,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     {
         Log.i(MainActivity.TAG_MAIN_ACTIVITY, "'onResponse'");
 
+        // This snippet just updates the "favorite" condition of the item within the current visible page
+        for (FeedItem favItem : this.mFavItemList)
+        {
+            for (FeedItem newItem : updatedItemList)
+            {
+                if (favItem.getItemTitle().equals(newItem.getItemTitle()))
+                    newItem.setFavorite(true);
+            }
+        }
+
         // This next line is where the 'Fragment' in the foreground gets updated.
         ((CardFragment) ((MyPagerAdapter) this.mViewPager.getAdapter()).getmFragmentList().get(fragmentPosition)).updateFragment(updatedItemList, updateDate);
         // This next line is where 'MyPagerAdapter' data list gets updated, so that future queries can be locally loaded
@@ -227,6 +243,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // The information is queried from the Internet
         FeedParser mParser = new FeedParser(MainActivity.this);
         mParser.execute(urlFeed, fragmentPosition);
+    }
+
+    // This next method updates the "Favoritos" 'Fragment' (position 0) once the "heart" 'Button' is clicked
+    @Override
+    public void onFrag2Fav(FeedItem mItem2Fav)
+    {
+        if (mItem2Fav.isFavorite())
+            this.mFavItemList.add(mItem2Fav);
+        else
+        {
+            for (FeedItem favItem : this.mFavItemList)
+            {
+                if (favItem.getItemTitle().equals(mItem2Fav.getItemTitle()))
+                    this.mFavItemList.remove(favItem);
+            }
+        }
+
+        ((CardFragment) ((MyPagerAdapter) this.mViewPager.getAdapter()).getmFragmentList().get(0)).updateFragment(this.mFavItemList, "");
     }
 
     // This 'FragmentStatePageAdapter' instance will be used with the 'ViewPager' object
@@ -254,7 +288,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public Fragment getItem(int position)
-        {Log.e(MyPagerAdapter.TAG_MY_PAGER_ADAPTER, "'getItem'");
+        {
             Log.i(MyPagerAdapter.TAG_MY_PAGER_ADAPTER, "getItem, Page: " + position);
             Log.i(MyPagerAdapter.TAG_MY_PAGER_ADAPTER, "Previously loaded?: " + (this.getmFragmentList().get(position) != null));
 
@@ -280,27 +314,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.i(MyPagerAdapter.TAG_MY_PAGER_ADAPTER, "Loading from local");
 
             return this.getmFragmentList().get(position);
-        }
-
-        @Override
-        public Object instantiateItem(ViewGroup container, int position)
-        {
-            Log.e(MainActivity.TAG_MAIN_ACTIVITY, "'instantiateItem'");
-
-            //this.updateFavoritosTab(position);
-
-
-
-
-            return super.instantiateItem(container, position);
-        }
-
-        private void updateFavoritosTab(int fragmentPosition)
-        {
-
-
-            // This next line is where the 'Fragment' in the foreground gets updated.
-            //((CardFragment) ((MyPagerAdapter) MainActivity.this.mViewPager.getAdapter()).getmFragmentList().get(fragmentPosition)).updateFragment(updatedItemList, updateDate);
         }
 
         @Override

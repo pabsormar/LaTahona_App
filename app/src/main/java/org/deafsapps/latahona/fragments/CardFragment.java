@@ -26,6 +26,15 @@ public class CardFragment extends Fragment
     private List<FeedItem> mAdapterDataList;
     private String mDataListDate;
     private RecyclerView mRecyclerView;
+    private boolean favFragment = false;
+
+    // This interface will allow to add a 'Card' object to the "Favoritos" tab
+    public interface OnFragment2Favoritos
+    {
+        void onFrag2Fav(FeedItem mItem2Update);
+    }
+    // The interface is implemented by the entity which is receiving the response, and a field is created in the "sender"
+    private OnFragment2Favoritos mFrag2FavUpdate;
 
     // This static constructor is preferred, since it potentially allows to assign a 'Bundle' object and return the 'Fragment' itself
     public static CardFragment newInstance() { return new CardFragment(); }
@@ -35,6 +44,9 @@ public class CardFragment extends Fragment
 
     public RecyclerView getmRecyclerView() { return mRecyclerView; }
 
+    public boolean isFavFragment() { return this.favFragment; }
+    public void setFavFragment(boolean favFragment) { this.favFragment = favFragment; }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
@@ -42,13 +54,15 @@ public class CardFragment extends Fragment
 
         // 'mList' can be null, which means no data is shown on the 'Fragment' object ('getItemCount' = 0)
         // In fact, all 'CardFragment' instances are empty ('mAdapterDataList' = null) at the beginning
-        CardContentAdapter mContAdapter = new CardContentAdapter(this.getContext(), this.mAdapterDataList, this.mDataListDate);
+        CardContentAdapter mContentAdapter = new CardContentAdapter(this.getContext(), this.mAdapterDataList, this.mDataListDate);
+
+        this.mFrag2FavUpdate = (OnFragment2Favoritos) this.getContext();
 
         // Inflate the layout for this 'Fragment'
         this.mRecyclerView = (RecyclerView) inflater.inflate(R.layout.recycler_view_layout, container, false);
         this.mRecyclerView.setHasFixedSize(true);
         this.mRecyclerView.setLayoutManager(new LinearLayoutManager(this.getContext()));
-        this.mRecyclerView.setAdapter(mContAdapter);
+        this.mRecyclerView.setAdapter(mContentAdapter);
 
         return this.mRecyclerView;
     }
@@ -65,6 +79,7 @@ public class CardFragment extends Fragment
         // This makes the 'Fragment' in the foreground to get updated live
         ((CardContentAdapter) this.mRecyclerView.getAdapter()).setItemList(mList);
         ((CardContentAdapter) this.mRecyclerView.getAdapter()).setmDate(updateDate);
+
         this.mRecyclerView.getAdapter().notifyDataSetChanged();
     }
 
@@ -118,7 +133,24 @@ public class CardFragment extends Fragment
                 {
                     Log.i(CardFragment.TAG_CARD_FRAGMENT, "favourite button clicked");
 
-                    Toast.makeText(whichView.getContext(), "Added to \"Favoritos\"", Toast.LENGTH_SHORT).show();
+                    boolean isFavItem = CardContentAdapter.this.getItemList().get(this.getAdapterPosition() - 1).isFavorite();
+
+                    if (isFavItem)
+                    {
+                        //this.favourite_Btn.setImageResource(R.drawable.ic_favorite_white);
+                        Toast.makeText(whichView.getContext(), "Eliminado de \"Favoritos\"", Toast.LENGTH_SHORT).show();
+                        isFavItem = false;
+                    }
+                    else
+                    {
+                        //this.favourite_Btn.setImageResource(R.drawable.ic_favorite_red);
+                        Toast.makeText(whichView.getContext(), "Añadido a \"Favoritos\"", Toast.LENGTH_SHORT).show();
+                        isFavItem = true;
+                    }
+
+                    // This next line updates the boolean variable associated to the 'Card' object on the current 'CardFragment'
+                    CardContentAdapter.this.getItemList().get(this.getAdapterPosition() - 1).setFavorite(isFavItem);
+                    CardFragment.this.mFrag2FavUpdate.onFrag2Fav(CardContentAdapter.this.getItemList().get(this.getAdapterPosition() - 1));
                 }
                 else if (whichView.getId() == R.id.share_button)
                 {
@@ -193,6 +225,10 @@ public class CardFragment extends Fragment
                 // 'position - 1' is employed so that the "date TextView" on top of the list is taken into account
                 ((MyCardViewHolder) holder).title_TxtView.setText(Html.fromHtml(this.itemList.get(position - 1).getItemTitle()));
                 ((MyCardViewHolder) holder).description_TxtView.setText(Html.fromHtml(this.itemList.get(position - 1).getItemDescription()));
+                ((MyCardViewHolder) holder).description_TxtView.setText(Html.fromHtml(this.itemList.get(position - 1).getItemDescription()));
+                // Just in case we want to try
+                //int favDrawable = this.itemList.get(position - 1).isFavorite() ? R.drawable.ic_favorite_red : R.drawable.ic_favorite_white;
+                //((MyCardViewHolder) holder).favourite_Btn.setImageResource(favDrawable);
             }
         }
 
