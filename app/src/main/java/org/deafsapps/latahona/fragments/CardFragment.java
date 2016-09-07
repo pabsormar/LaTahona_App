@@ -1,6 +1,7 @@
 package org.deafsapps.latahona.fragments;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.deafsapps.latahona.R;
+import org.deafsapps.latahona.activities.DetailActivity;
 import org.deafsapps.latahona.util.FeedItem;
 
 import java.util.List;
@@ -90,7 +92,7 @@ public class CardFragment extends Fragment
         private static final int TYPE_HEADER = 0;
         private static final int TYPE_CARD = 1;
 
-        private Context mContext;
+        //private Context mContext;
         private List<FeedItem> itemList;
         private String mDate;
 
@@ -109,27 +111,41 @@ public class CardFragment extends Fragment
         // Creating a 'ViewHolder' to speed up the performance
         public class MyCardViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
         {
+            private View cardView;
             private TextView title_TxtView;
             private TextView description_TxtView;
             private ImageButton favourite_Btn;
             private ImageButton share_Btn;
+            private TextView pubDate_TxtView;
 
             public MyCardViewHolder(View itemView)
             {
                 super(itemView);
 
+                this.cardView = itemView;
+                    this.cardView.setOnClickListener(this);
                 this.title_TxtView = (TextView) itemView.findViewById(R.id.card_title);
                 this.description_TxtView = (TextView) itemView.findViewById(R.id.card_body);
                 this.favourite_Btn = (ImageButton) itemView.findViewById(R.id.favourite_button);
                     this.favourite_Btn.setOnClickListener(this);
                 this.share_Btn = (ImageButton) itemView.findViewById(R.id.share_button);
                     this.share_Btn.setOnClickListener(this);
+                this.pubDate_TxtView = (TextView) itemView.findViewById(R.id.card_pub_date);
             }
 
             @Override
             public void onClick(View whichView)
             {
-                if (whichView.getId() == R.id.favourite_button)
+                if (whichView.equals(this.cardView))
+                {
+                    Log.i(CardFragment.TAG_CARD_FRAGMENT, "Clicked " + String.valueOf(this.getAdapterPosition() - 1));
+
+                    Intent cardViewIntent = new Intent(getContext(), DetailActivity.class);
+                        cardViewIntent.putExtra("detailTitle", mAdapterDataList.get(this.getAdapterPosition() - 1).getItemTitle());
+                        cardViewIntent.putExtra("detailBody", mAdapterDataList.get(this.getAdapterPosition() - 1).getItemContent());
+                    startActivity(cardViewIntent);
+                }
+                else if (whichView.getId() == R.id.favourite_button)
                 {
                     Log.i(CardFragment.TAG_CARD_FRAGMENT, "favourite button clicked");
 
@@ -152,17 +168,14 @@ public class CardFragment extends Fragment
                     CardContentAdapter.this.getItemList().get(this.getAdapterPosition() - 1).setFavorite(isFavItem);
                     CardFragment.this.mFrag2FavUpdate.onFrag2Fav(CardContentAdapter.this.getItemList().get(this.getAdapterPosition() - 1));
                 }
-                else if (whichView.getId() == R.id.share_button)
-                {
-                    Log.i(CardContentAdapter.TAG_CARD_CONTENT_ADAPTER, "share button clicked");
-                }
+                else if (whichView.getId() == R.id.share_button) { Log.i(CardContentAdapter.TAG_CARD_CONTENT_ADAPTER, "share button clicked"); }
             }
         }
 
         // Provide a suitable constructor (depends on the kind of dataset)
         public CardContentAdapter(Context aContext, List<FeedItem> objectList, String objectDate)
         {
-            this.mContext = aContext;
+            //this.mContext = aContext;
             this.itemList = objectList;
             this.mDate = objectDate;
         }
@@ -185,15 +198,7 @@ public class CardFragment extends Fragment
             else if (viewType == CardContentAdapter.TYPE_CARD)
             {
                 // create a new view
-                View viewRow = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_view_custom_layout, parent, false);
-                viewRow.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v)
-                    {
-                        Toast.makeText(mContext, "Clicked", Toast.LENGTH_SHORT).show();
-                    }
-                });
-
+                final View viewRow = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_view_custom_layout, parent, false);
                 // set the view's size, margins, padding and layout parameters
                 return new MyCardViewHolder(viewRow);
             }
@@ -225,7 +230,7 @@ public class CardFragment extends Fragment
                 // 'position - 1' is employed so that the "date TextView" on top of the list is taken into account
                 ((MyCardViewHolder) holder).title_TxtView.setText(Html.fromHtml(this.itemList.get(position - 1).getItemTitle()));
                 ((MyCardViewHolder) holder).description_TxtView.setText(Html.fromHtml(this.itemList.get(position - 1).getItemDescription()));
-                ((MyCardViewHolder) holder).description_TxtView.setText(Html.fromHtml(this.itemList.get(position - 1).getItemDescription()));
+                ((MyCardViewHolder) holder).pubDate_TxtView.setText(Html.fromHtml("<i>" + this.itemList.get(position - 1).getItemPubDate().substring(5, 22) + "</i>"));
                 // Just in case we want to try
                 //int favDrawable = this.itemList.get(position - 1).isFavorite() ? R.drawable.ic_favorite_red : R.drawable.ic_favorite_white;
                 //((MyCardViewHolder) holder).favourite_Btn.setImageResource(favDrawable);

@@ -32,7 +32,7 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
     private static final String PUBDATE = "pubDate";
     private static final String CATEGORY = "category";
     private static final String DESCRIPTION = "description";
-    private static final String CONTENT = "content:encoded";
+    private static final String CONTENT = "encoded";   //"content:encoded"
 
     private Context threadContext;
     //private ProgressDialog mProgDialog;
