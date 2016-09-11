@@ -31,6 +31,7 @@ import org.deafsapps.latahona.util.FeedItem;
 import org.deafsapps.latahona.util.FeedParser;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, NavigationView.OnNavigationItemSelectedListener,
@@ -253,10 +254,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             this.mFavItemList.add(mItem2Fav);
         else
         {
-            for (FeedItem favItem : this.mFavItemList)
+            // To safely remove from a collection while iterating over it, we need to use an 'Iterator'
+            Iterator<FeedItem> mIterator = this.mFavItemList.iterator();
+
+            while (mIterator.hasNext())
             {
-                if (favItem.getItemTitle().equals(mItem2Fav.getItemTitle()))
-                    this.mFavItemList.remove(favItem);
+                FeedItem mItem = mIterator.next();
+
+                if (mItem.getItemTitle().equals(mItem2Fav.getItemTitle()))
+                    mIterator.remove();
             }
         }
 

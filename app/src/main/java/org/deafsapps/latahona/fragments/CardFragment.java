@@ -1,5 +1,6 @@
 package org.deafsapps.latahona.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -24,6 +25,7 @@ import java.util.List;
 public class CardFragment extends Fragment
 {
     private static final String TAG_CARD_FRAGMENT = "In-CardFragment";
+    private static final int DETAIL_ACTIVITY_REQUEST = 1;  // The request code
 
     private List<FeedItem> mAdapterDataList;
     private String mDataListDate;
@@ -141,32 +143,31 @@ public class CardFragment extends Fragment
                     Log.i(CardFragment.TAG_CARD_FRAGMENT, "Clicked " + String.valueOf(this.getAdapterPosition() - 1));
 
                     Intent cardViewIntent = new Intent(getContext(), DetailActivity.class);
-                        cardViewIntent.putExtra("detailTitle", mAdapterDataList.get(this.getAdapterPosition() - 1).getItemTitle());
-                        cardViewIntent.putExtra("detailBody", mAdapterDataList.get(this.getAdapterPosition() - 1).getItemContent());
-                    startActivity(cardViewIntent);
+                        cardViewIntent.putExtra("feedItem", mAdapterDataList.get(this.getAdapterPosition() - 1));
+                        //cardViewIntent.putExtra("detailTitle", mAdapterDataList.get(this.getAdapterPosition() - 1).getItemTitle());
+                        //cardViewIntent.putExtra("detailBody", mAdapterDataList.get(this.getAdapterPosition() - 1).getItemContent());
+                        cardViewIntent.putExtra("articlePosition", this.getAdapterPosition() - 1);
+                    startActivityForResult(cardViewIntent, CardFragment.DETAIL_ACTIVITY_REQUEST);
+                    //startActivity(cardViewIntent);
                 }
                 else if (whichView.getId() == R.id.favourite_button)
                 {
                     Log.i(CardFragment.TAG_CARD_FRAGMENT, "favourite button clicked");
 
-                    boolean isFavItem = CardContentAdapter.this.getItemList().get(this.getAdapterPosition() - 1).isFavorite();
+                    FeedItem mItem = CardContentAdapter.this.getItemList().get(this.getAdapterPosition() - 1);
 
-                    if (isFavItem)
-                    {
-                        //this.favourite_Btn.setImageResource(R.drawable.ic_favorite_white);
-                        Toast.makeText(whichView.getContext(), "Eliminado de \"Favoritos\"", Toast.LENGTH_SHORT).show();
-                        isFavItem = false;
-                    }
-                    else
-                    {
-                        //this.favourite_Btn.setImageResource(R.drawable.ic_favorite_red);
-                        Toast.makeText(whichView.getContext(), "Añadido a \"Favoritos\"", Toast.LENGTH_SHORT).show();
-                        isFavItem = true;
-                    }
+                    // Toggling favourite state and showing an informative 'Toast' on screen
+                    mItem.setFavorite(mItem.isFavorite() ? false : true);
+                    updateFavouriteState(mItem, this.getAdapterPosition() - 1);
 
+                    Toast.makeText(getContext(), (mItem.isFavorite() ? "Añadido a" : "Eliminado de") + " \"Favoritos\"", Toast.LENGTH_SHORT).show();
+
+                    /*
+                    Toast.makeText(whichView.getContext(), (isFavItem ? "Añadido a" : "Eliminado de") + " \"Favoritos\"", Toast.LENGTH_SHORT).show();
                     // This next line updates the boolean variable associated to the 'Card' object on the current 'CardFragment'
                     CardContentAdapter.this.getItemList().get(this.getAdapterPosition() - 1).setFavorite(isFavItem);
                     CardFragment.this.mFrag2FavUpdate.onFrag2Fav(CardContentAdapter.this.getItemList().get(this.getAdapterPosition() - 1));
+                    */
                 }
                 else if (whichView.getId() == R.id.share_button) { Log.i(CardContentAdapter.TAG_CARD_CONTENT_ADAPTER, "share button clicked"); }
             }
@@ -242,5 +243,34 @@ public class CardFragment extends Fragment
         // Once again, the size of the list is '+ 1' to take into account the "date TextView" on top
         @Override
         public int getItemCount() { return this.itemList == null ? 0 : this.itemList.size() + 1; }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == CardFragment.DETAIL_ACTIVITY_REQUEST)
+        {
+            if (resultCode == Activity.RESULT_OK)
+            {
+                Log.i(CardFragment.TAG_CARD_FRAGMENT, "'onActivityResult'");
+                //Log.i(CardFragment.TAG_CARD_FRAGMENT, String.valueOf(data.getBooleanExtra("isFavourite", false)));
+                //Log.i(CardFragment.TAG_CARD_FRAGMENT, String.valueOf(data.getIntExtra("articlePosition", -1)));
+
+                FeedItem mItem = data.getParcelableExtra("feedItem");
+                int pos = data.getIntExtra("articlePosition", -1);
+
+                updateFavouriteState(mItem, pos);
+            }
+        }
+    }
+
+    private void updateFavouriteState(FeedItem anItem, int itemPos)
+    {
+        Log.i(CardFragment.TAG_CARD_FRAGMENT, "updateFavouriteState");
+
+        ((CardContentAdapter) this.mRecyclerView.getAdapter()).getItemList().set(itemPos, anItem);
+        this.mFrag2FavUpdate.onFrag2Fav(((CardContentAdapter) this.mRecyclerView.getAdapter()).getItemList().get(itemPos));
     }
 }
