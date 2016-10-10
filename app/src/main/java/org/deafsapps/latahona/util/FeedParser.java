@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2016 Pablo L. Sordo Martinez
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package org.deafsapps.latahona.util;
 
 import android.app.Activity;
@@ -7,6 +29,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
 
+import org.deafsapps.latahona.BuildConfig;
 import org.deafsapps.latahona.R;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -24,7 +47,7 @@ import java.util.Locale;
 
 public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
 {
-    private static final String TAG_FEED_PARSER = "In-FeedParser";
+    private static final String TAG = "In-FeedParser";
 
     private static final String ITEM = "item";
     private static final String TITLE = "title";
@@ -34,43 +57,40 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
     private static final String DESCRIPTION = "description";
     private static final String CONTENT = "encoded";   //"content:encoded"
 
-    private Context threadContext;
+    private Context mUiThreadContext;
     //private ProgressDialog mProgDialog;
-    private int fragmentPosition;
+    private int mFragmentPosition;
 
     // This interface will allow to return a 'FeedItem' list to the main Activity
-    public interface OnAsyncResponse
-    {
-        void onResponse(List<FeedItem> dataItemList, int position, String date);
+    public interface FeedParserCallback {
+        void onFeedParserResponse(List<FeedItem> dataItemList, int position, String date);
     }
     // The interface is implemented by the entity which is receiving the response, and a field is created in the "sender"
-    private OnAsyncResponse mAsyncResponse;
+    private FeedParserCallback mFeedParserCallback;
 
-    public FeedParser(Context mContext)
-    {
-        this.threadContext = mContext;
+    public FeedParser(Context context) {
+        mUiThreadContext = context;Log.e(TAG, "FeedParser constructor");
         //this.mProgDialog = new ProgressDialog(mContext);
-        this.mAsyncResponse = (OnAsyncResponse) mContext;
+        mFeedParserCallback = (FeedParserCallback) context;
         //this.callingFragment = mFragment;
     }
 
     // Shows progress dialog to "keep the app alive"
-    protected void onPreExecute()
-    {   /*
+    protected void onPreExecute() {
+        /*
         this.mProgDialog.setMessage("Loading...");
         this.mProgDialog.show();
         */
     }
 
     @Override
-    protected ArrayList<FeedItem> doInBackground(String[] params)
-    {
-        try
-        {
+    protected ArrayList<FeedItem> doInBackground(String[] params) {
+        try {
             // The input arguments are fetched in order
-            Log.i(FeedParser.TAG_FEED_PARSER, "URL to be queried: " + params[0]);
+            if (BuildConfig.DEBUG) Log.d(TAG, "URL to be queried: "
+                    + params[0]);
             URL myUrl = new URL(params[0]);   // Throws 'MalformedURLException'
-            this.fragmentPosition = Integer.valueOf(params[1]);
+            mFragmentPosition = Integer.valueOf(params[1]);
 
             HttpURLConnection myConnection = (HttpURLConnection) myUrl.openConnection();   // Throws 'IOException'
                 myConnection.setRequestMethod("GET");
@@ -79,31 +99,30 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
                 myConnection.connect();   // Throws 'IOException'
 
             int respCode = myConnection.getResponseCode();   // Throws 'IOException'
-                Log.i(FeedParser.TAG_FEED_PARSER, "The response is: " + respCode);
+            if (BuildConfig.DEBUG) Log.d(TAG, "The response is: " + respCode);
 
-            if (respCode == HttpURLConnection.HTTP_OK)
-            {
-                ArrayList<FeedItem> mFeedItemList;
+            if (respCode == HttpURLConnection.HTTP_OK) {
+                ArrayList<FeedItem> itemList;
 
-                InputStream myInStream = myConnection.getInputStream();   // Throws 'IOException'
+                InputStream inputStream = myConnection.getInputStream();   // Throws 'IOException'
 
                 // The following method does the actual parsing of the feed
-                mFeedItemList = ParseFeed(myInStream);
+                itemList = ParseFeed(inputStream);
 
-                myInStream.close();   // Always close the 'InputStream'
+                inputStream.close();   // Always close the 'InputStream'
 
-                return mFeedItemList;
+                return itemList;
             }
+        } catch (IOException e1) {
+            e1.printStackTrace();
         }
-        catch (IOException e1) { e1.printStackTrace(); }
 
         return null;
     }
 
     @Override
-    protected void onPostExecute(ArrayList<FeedItem> mList)
-    {
-        super.onPostExecute(mList);
+    protected void onPostExecute(ArrayList<FeedItem> list) {
+        super.onPostExecute(list);
 
         /*
         // 'ProgressDialog' has to be dismissed
@@ -111,78 +130,87 @@ public class FeedParser extends AsyncTask<String, Void, ArrayList<FeedItem>>
             this.mProgDialog.dismiss();
         */
 
-        if (mList != null)
-        {
-            Log.i(FeedParser.TAG_FEED_PARSER, "Feed " + fragmentPosition + " loaded");
+        if (list != null) {
+            if (BuildConfig.DEBUG) Log.d(TAG, "Feed "
+                    + mFragmentPosition + " loaded");
 
             // Once finished, 'onResponse' interface is employed to send data back to the 'MainActivity'
-            this.mAsyncResponse.onResponse(mList, this.fragmentPosition, "Actualizado " + new SimpleDateFormat("d MMM yyyy HH:mm", Locale.getDefault()).format(new Date()));
+            mFeedParserCallback.onFeedParserResponse(list, mFragmentPosition, "Actualizado "
+                    + new SimpleDateFormat("d MMM yyyy HH:mm", Locale.getDefault()).format(new Date()));
         }
-        else
-        {
-            Log.w(FeedParser.TAG_FEED_PARSER, "Error loading feed");
+        else {
+            if (BuildConfig.DEBUG) Log.w(TAG, "Error loading feed");
             // This 'Snackbar' will dismiss the one currently on display (saying "Loading...")
-            Snackbar.make(((Activity) this.threadContext).findViewById(R.id.appCoordLayout), "Error loading feed", Snackbar.LENGTH_SHORT).show();
+            Snackbar.make(((Activity) mUiThreadContext).findViewById(R.id.coordinator_layout_activity_main),
+                    "Error loading feed", Snackbar.LENGTH_SHORT).show();
         }
     }
 
     @Nullable
-    private ArrayList<FeedItem> ParseFeed(InputStream myInStream)
-    {
+    private ArrayList<FeedItem> ParseFeed(InputStream myInStream) {
         ArrayList<FeedItem> feedList = new ArrayList<>();
 
-        try
-        {
-            XmlPullParserFactory mFactory;
-                mFactory = XmlPullParserFactory.newInstance();
-                mFactory.setNamespaceAware(true);
+        try {
+            XmlPullParserFactory xmlPullParserFactory;
+            xmlPullParserFactory = XmlPullParserFactory.newInstance();
+            xmlPullParserFactory.setNamespaceAware(true);
 
-            XmlPullParser myXmlParser;
-                myXmlParser = mFactory.newPullParser();
-                myXmlParser.setInput(myInStream, "UTF-8");   // Including the encoding is CRITICAL to work it out!
+            XmlPullParser xmlPullParser;
+                xmlPullParser = xmlPullParserFactory.newPullParser();
+                xmlPullParser.setInput(myInStream, "UTF-8");   // Including the encoding is CRITICAL to work it out!
 
             FeedItem mItem = null;
             String eventText = "";
-            int eventType = myXmlParser.getEventType();
+            int eventType = xmlPullParser.getEventType();
 
-            while (eventType != XmlPullParser.END_DOCUMENT)
-            {
-                switch (eventType)
-                {
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                switch (eventType) {
                     case XmlPullParser.START_TAG:
-                        if (myXmlParser.getName().equals(FeedParser.ITEM)) { mItem = new FeedItem(); }
+                        if (xmlPullParser.getName().equals(FeedParser.ITEM)) {
+                            mItem = new FeedItem();
+                        }
                         break;
 
                     case XmlPullParser.TEXT:
-                        eventText = myXmlParser.getText();
+                        eventText = xmlPullParser.getText();
                         break;
 
                     case XmlPullParser.END_TAG:
-                        if (mItem != null)
-                        {
-                            if (myXmlParser.getName().equals(FeedParser.ITEM))
-                            {
+                        if (mItem != null) {
+                            if (xmlPullParser.getName().equals(FeedParser.ITEM)) {
                                 feedList.add(mItem);
                                 mItem = null;
                             }
-                            else if (myXmlParser.getName().equals(FeedParser.TITLE)) { mItem.setItemTitle(eventText); }
-                            else if (myXmlParser.getName().equals(FeedParser.LINK)) { mItem.setItemLink(eventText); }
-                            else if (myXmlParser.getName().equals(FeedParser.PUBDATE)) { mItem.setItemPubDate(eventText); }
-                            else if (myXmlParser.getName().equals(FeedParser.CATEGORY)) { mItem.setItemCategoryElement(eventText); }
-                            else if (myXmlParser.getName().equals(FeedParser.DESCRIPTION)) { mItem.setItemDescription(eventText); }
-                            else if (myXmlParser.getName().equals(FeedParser.CONTENT)) { mItem.setItemContent(eventText); }
+                            else if (xmlPullParser.getName().equals(FeedParser.TITLE)) {
+                                mItem.setItemTitle(eventText);
+                            }
+                            else if (xmlPullParser.getName().equals(FeedParser.LINK)) {
+                                mItem.setItemLink(eventText);
+                            }
+                            else if (xmlPullParser.getName().equals(FeedParser.PUBDATE)) {
+                                mItem.setItemPubDate(eventText);
+                            }
+                            else if (xmlPullParser.getName().equals(FeedParser.CATEGORY)) {
+                                mItem.setItemCategoryElement(eventText);
+                            }
+                            else if (xmlPullParser.getName().equals(FeedParser.DESCRIPTION)) {
+                                mItem.setItemDescription(eventText);
+                            }
+                            else if (xmlPullParser.getName().equals(FeedParser.CONTENT)) {
+                                mItem.setItemContent(eventText);
+                            }
                         }
                         break;
                 }
 
-                eventType = myXmlParser.next();
+                eventType = xmlPullParser.next();
             }
             System.out.println("End document");
 
+        } catch (XmlPullParserException | IOException e1) {
+            e1.printStackTrace();
         }
-        catch (XmlPullParserException | IOException e1) { e1.printStackTrace(); }
-        finally
-        {
+        finally {
             if (feedList.isEmpty())
                 feedList = null;
         }
