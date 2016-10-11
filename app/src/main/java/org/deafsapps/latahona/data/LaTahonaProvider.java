@@ -10,9 +10,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
-import static org.deafsapps.latahona.data.LaTahonaContract.FeedItemEntry.CONTENT_URI;
-import static org.deafsapps.latahona.data.LaTahonaContract.FeedItemEntry.TABLE_NAME;
-
 /**
  * Created by ${USER} on ${DATE}.
  *
@@ -63,7 +60,11 @@ public class LaTahonaProvider extends ContentProvider {
         // this makes delete all rows return the number of rows deleted
         if (selection == null) selection = "1";
 
-        rowsDeleted = db.delete(TABLE_NAME, selection, selectionArgs);
+        rowsDeleted = db.delete(
+                LaTahonaContract.FeedItemEntry.TABLE_NAME,
+                selection,
+                selectionArgs
+        );
 
         if (rowsDeleted != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
@@ -78,15 +79,14 @@ public class LaTahonaProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
         Uri returnUri;
 
-        switch (match) {
-            case FEED_ENTRY:
-                long regId = db.insert(TABLE_NAME, null, values);
-                if (regId > 0) { returnUri = ContentUris.withAppendedId(CONTENT_URI, regId); }
-                else { throw new SQLException("Failed to insert row into " + uri); }
-                break;
-            default:
-                throw new UnsupportedOperationException("Unknown uri: " + uri);
-        }
+        long regId = db.insert(
+                LaTahonaContract.FeedItemEntry.TABLE_NAME,
+                null,
+                values);
+        if (regId > 0) { returnUri = ContentUris.withAppendedId(
+                LaTahonaContract.FeedItemEntry.CONTENT_URI, regId); }
+        else { throw new SQLException("Failed to insert row into " + uri); }
+
         // Notify registered observers that a row was updated and attempt to sync
         getContext().getContentResolver().notifyChange(uri, null);
 
@@ -94,7 +94,7 @@ public class LaTahonaProvider extends ContentProvider {
     }
 
     @Override
-    public int bulkInsert(Uri uri, ContentValues[] values) {
+    public int bulkInsert(Uri uri, ContentValues[] contentValues) {
         final SQLiteDatabase db = mDbHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
         int rowsInserted = 0;
@@ -103,22 +103,28 @@ public class LaTahonaProvider extends ContentProvider {
             case FEED_ENTRIES:
                 db.beginTransaction();
                 try {
-                    for (ContentValues cv : values) {
-                        long newID = db.insertOrThrow(TABLE_NAME, null, cv);
-                        if (newID <= 0) {
+                    for (ContentValues cv : contentValues) {
+                        long newID = db.insert(
+                                LaTahonaContract.FeedItemEntry.TABLE_NAME,
+                                null,
+                                cv
+                        );
+                        if (newID > 0) {
+                            rowsInserted++;
+                        }
+                        else {
                             throw new SQLException("Failed to insert row into " + uri);
                         }
                     }
                     db.setTransactionSuccessful();
                     getContext().getContentResolver().notifyChange(uri, null);
-                    rowsInserted = values.length;
                 } finally {
                     db.endTransaction();
                 }
 
                 return rowsInserted;
             default:
-                return super.bulkInsert(uri, values);
+                return super.bulkInsert(uri, contentValues);
         }
     }
 
@@ -128,7 +134,8 @@ public class LaTahonaProvider extends ContentProvider {
         final SQLiteDatabase db = mDbHelper.getReadableDatabase();
         Cursor retCursor;
 
-        retCursor = db.query(TABLE_NAME,
+        retCursor = db.query(
+                LaTahonaContract.FeedItemEntry.TABLE_NAME,
                 projection,
                 selection,
                 selectionArgs,
@@ -147,7 +154,12 @@ public class LaTahonaProvider extends ContentProvider {
         final SQLiteDatabase db = mDbHelper.getWritableDatabase();
         int rowsUpdated;
 
-        rowsUpdated = db.update(TABLE_NAME, values, selection, selectionArgs);
+        rowsUpdated = db.update(
+                LaTahonaContract.FeedItemEntry.TABLE_NAME,
+                values,
+                selection,
+                selectionArgs
+        );
 
         if (rowsUpdated != 0) {
             getContext().getContentResolver().notifyChange(uri, null);

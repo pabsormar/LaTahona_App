@@ -17,14 +17,6 @@ import org.robolectric.annotation.Config;
 
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
-import static org.deafsapps.latahona.data.LaTahonaContract.FeedItemEntry.COLUMN_ITEM_CATEGORY;
-import static org.deafsapps.latahona.data.LaTahonaContract.FeedItemEntry.COLUMN_ITEM_CONTENT;
-import static org.deafsapps.latahona.data.LaTahonaContract.FeedItemEntry.COLUMN_ITEM_DESCRIPTION;
-import static org.deafsapps.latahona.data.LaTahonaContract.FeedItemEntry.COLUMN_ITEM_FAVOURITE;
-import static org.deafsapps.latahona.data.LaTahonaContract.FeedItemEntry.COLUMN_ITEM_LINK;
-import static org.deafsapps.latahona.data.LaTahonaContract.FeedItemEntry.COLUMN_ITEM_PUB_DATE;
-import static org.deafsapps.latahona.data.LaTahonaContract.FeedItemEntry.COLUMN_ITEM_TITLE;
-import static org.deafsapps.latahona.data.LaTahonaContract.FeedItemEntry.TABLE_NAME;
 
 /**
  * Created by ${USER} on ${DATE}.
@@ -64,7 +56,8 @@ public class TestDb {
     @Test
     public void testDbColumns() {
         // Query the database and receive a Cursor back
-        Cursor cursorQuery = mDb.query(TABLE_NAME,  // Table to Query
+        Cursor cursorQuery = mDb.query(
+                LaTahonaContract.FeedItemEntry.TABLE_NAME,  // Table to Query
                 null, // leaving "columns" null just returns all the columns.
                 null, // cols for "where" clause
                 null, // values for "where" clause
@@ -74,9 +67,14 @@ public class TestDb {
         );
 
         String[] queriedColumnNames = cursorQuery.getColumnNames();
-        String[] actualColumnNames = {COLUMN_ITEM_TITLE, COLUMN_ITEM_LINK, COLUMN_ITEM_PUB_DATE,
-                COLUMN_ITEM_CATEGORY, COLUMN_ITEM_DESCRIPTION, COLUMN_ITEM_CONTENT,
-                COLUMN_ITEM_FAVOURITE};
+        String[] actualColumnNames = {LaTahonaContract.FeedItemEntry.COLUMN_ITEM_TITLE,
+                LaTahonaContract.FeedItemEntry.COLUMN_ITEM_LINK,
+                LaTahonaContract.FeedItemEntry.COLUMN_ITEM_PUB_DATE,
+                LaTahonaContract.FeedItemEntry.COLUMN_ITEM_CATEGORY,
+                LaTahonaContract.FeedItemEntry.COLUMN_ITEM_DESCRIPTION,
+                LaTahonaContract.FeedItemEntry.COLUMN_ITEM_CONTENT,
+                LaTahonaContract.FeedItemEntry.COLUMN_ITEM_FAVOURITE};
+
         int dbColumnOffset = 1;
         for (int idx = dbColumnOffset; idx < queriedColumnNames.length; idx++) {
             assertTrue("Column name with index " + idx + " does not match",
@@ -89,13 +87,18 @@ public class TestDb {
     @Test
     public void testInsertDbEntry() {
         // Create feed values
-        ContentValues feedEntryValues = createDummyContentValuesObject();
+        ContentValues feedEntryValues = TestUtilities.createDummyContentValuesObject();
         // Insert ContentValues into database and get a row ID back
-        long feedEntryRowId = mDb.insert(TABLE_NAME, null, feedEntryValues);
+        long feedEntryRowId = mDb.insert(
+                LaTahonaContract.FeedItemEntry.TABLE_NAME,
+                null,
+                feedEntryValues
+        );
         assertTrue(feedEntryRowId != -1);
 
         // Query the database and receive a Cursor back
-        Cursor cursorQuery = mDb.query(TABLE_NAME,  // Table to Query
+        Cursor cursorQuery = mDb.query(
+                LaTahonaContract.FeedItemEntry.TABLE_NAME,  // Table to Query
                 null, // leaving "columns" null just returns all the columns.
                 null, // cols for "where" clause
                 null, // values for "where" clause
@@ -112,13 +115,20 @@ public class TestDb {
     @Test
     public void testDeleteDbEntry() {
         // Create feed values
-        ContentValues feedEntryValues = createDummyContentValuesObject();
+        ContentValues feedEntryValues = TestUtilities.createDummyContentValuesObject();
         // Insert ContentValues into database and get a row ID back
-        long feedEntryRowId = mDb.insert(TABLE_NAME, null, feedEntryValues);
+        long feedEntryRowId = mDb.insert(
+                LaTahonaContract.FeedItemEntry.TABLE_NAME,
+                null,
+                feedEntryValues
+        );
         assertTrue(feedEntryRowId != -1);
 
-        int rowsAffected = mDb.delete(TABLE_NAME, "_id=?",
-                new String[] { String.valueOf(feedEntryRowId) });
+        int rowsAffected = mDb.delete(
+                LaTahonaContract.FeedItemEntry.TABLE_NAME,
+                "_id=?",
+                new String[] { String.valueOf(feedEntryRowId) }
+        );
         assertTrue("Wrong number of rows affected by the deletion", rowsAffected == 1);
     }
 
@@ -129,18 +139,5 @@ public class TestDb {
         mDb.close();
         assertTrue("DB could not be deleted",
                 mContext.deleteDatabase(LaTahonaDbHelper.DATABASE_NAME));
-    }
-
-    public ContentValues createDummyContentValuesObject() {
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(COLUMN_ITEM_TITLE, "Dummy title");
-        contentValues.put(COLUMN_ITEM_LINK, "Dummy link");
-        contentValues.put(COLUMN_ITEM_PUB_DATE, "Dummy publication date");
-        contentValues.put(COLUMN_ITEM_CATEGORY, "Dummy category");
-        contentValues.put(COLUMN_ITEM_DESCRIPTION, "Dummy description");
-        contentValues.put(COLUMN_ITEM_CONTENT, "Dummy content");
-        contentValues.put(COLUMN_ITEM_FAVOURITE, true);
-
-        return contentValues;
     }
 }
