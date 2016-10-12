@@ -108,8 +108,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setSupportActionBar(mToolbar);
 
         final ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null)
-        {
+        if (actionBar != null) {
             // Allows to use another 'drawable' on the 'ActionBar' (in the 'Toolbar' in this case)
             actionBar.setHomeAsUpIndicator(R.drawable.ic_menu_24dp);   // Corresponds to the 'Hamburger' icon
             // This line actually shows a 'Button' on the top left corner of the 'ActionBar'/'Toolbar',
@@ -133,10 +132,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout_activity_main);
             // 'setupWithViewPager' requires to override the 'getPageTitle' method from the 'FragmentPageAdapter' class
             // The return value of the latter must be a List or array with the titles of the distinct tabs
-        if (tabLayout != null)
-        {
+        if (tabLayout != null) {
             tabLayout.setupWithViewPager(mViewPager);
-            tabLayout.setOnTabSelectedListener(this);
+            tabLayout.addOnTabSelectedListener(this);
         }
 
         /**
@@ -149,17 +147,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void onClick(View whichView)
-    {
-        if (whichView.getId() == R.id.fab_activity_main)
-        {
+    public void onClick(View whichView) {
+        if (whichView.getId() == R.id.fab_activity_main) {
             Snackbar.make(mCoordLayout, "FAB clicked", Snackbar.LENGTH_SHORT).show();
         }
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
+    public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater mInflater = getMenuInflater();
             mInflater.inflate(R.menu.main_activity, menu);
 
@@ -246,8 +241,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public void onTabSelected(TabLayout.Tab tab) {
-        Log.w(TAG, "Tab selected");
-
+        if (BuildConfig.DEBUG) { Log.d(TAG, "Tab selected"); }
         // Updates the 'ViewPager' according to the selected tab
         mViewPager.setCurrentItem(tab.getPosition());
         // The corresponding 'NavigationView' item is checked on according to the selected tab
@@ -282,9 +276,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         // This next line is where the 'Fragment' in the foreground gets updated.
-        ((CardFragment) ((MyPagerAdapter) mViewPager.getAdapter()).getmFragmentList().get(fragmentPosition)).updateFragment(updatedItemList, updateDate);
+        ((CardFragment) ((MyPagerAdapter) mViewPager.getAdapter()).getmFragmentList()
+                .get(fragmentPosition)).updateFragment(updatedItemList, updateDate);
         // This next line is where 'MyPagerAdapter' data list gets updated, so that future queries can be locally loaded
-        ((CardFragment.CardContentAdapter) ((CardFragment) ((MyPagerAdapter) mViewPager.getAdapter()).getmFragmentList().get(fragmentPosition)).getmRecyclerView().getAdapter()).setItemList(updatedItemList);
+        ((CardFragment.CardContentAdapter) ((CardFragment) ((MyPagerAdapter) mViewPager.getAdapter())
+                .getmFragmentList().get(fragmentPosition)).getmRecyclerView()
+                .getAdapter()).setItemList(updatedItemList);
         // 'Snackbar' object is dismissed
         mLoadingSnackbar.dismiss();
     }
@@ -362,9 +359,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public Fragment getItem(int position) {
-            if (BuildConfig.DEBUG) Log.d(MyPagerAdapter.TAG_MY_PAGER_ADAPTER, "getItem, Page: " + position);
+            if (BuildConfig.DEBUG) Log.d(MyPagerAdapter.TAG_MY_PAGER_ADAPTER,
+                    "getItem, Page: " + position);
             if (BuildConfig.DEBUG) {
-                Log.d(MyPagerAdapter.TAG_MY_PAGER_ADAPTER, "Previously loaded?: "
+                    Log.d(MyPagerAdapter.TAG_MY_PAGER_ADAPTER, "Previously loaded?: "
                         + (getmFragmentList().get(position) != null));
             }
 
