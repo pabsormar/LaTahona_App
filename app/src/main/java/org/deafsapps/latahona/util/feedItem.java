@@ -34,7 +34,7 @@ import java.util.List;
 /**
  * Created by ${USER} on ${DATE}.
  *
- * This class defines the object which will mainly compose the application
+ * This class defines the object which will mainly compose the application business logic
  */
 public class FeedItem implements Parcelable {
     private static final String TAG_FEED_ITEM = "In-FeedItem";
