@@ -50,10 +50,10 @@ ext {
     minSdkVersion = 11
     targetSdkVersion = 25
     compileSdkVersion = 25
-    buildToolsVersion = '25.0.0'
+    buildToolsVersion = '25.0.2'
 
     // App dependencies
-    supportLibraryVersion = '25.0.0'
+    supportLibraryVersion = '25.1.0'
     junitVersion = '4.12'
     mockitoVersion = '2.1.0'
     powerMockito = '1.6.2'

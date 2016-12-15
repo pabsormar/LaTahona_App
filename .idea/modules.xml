@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/LaTahonaApp.iml" filepath="$PROJECT_DIR$/LaTahonaApp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/LaTahona_App.iml" filepath="$PROJECT_DIR$/LaTahona_App.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
